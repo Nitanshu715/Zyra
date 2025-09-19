@@ -8,7 +8,6 @@ from chat_interface import render_chat_interface
 from profile_manager import render_profile_manager
 import os
 import base64
-import streamlit as st
 
 
 def main():
