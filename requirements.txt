@@ -5,4 +5,8 @@ pandas
 hashlib2
 Pylance
 os
+hashlib
 base64
+plotly.graph_objects
+plotly.expres
+datetime
