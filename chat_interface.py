@@ -5,7 +5,7 @@ from datetime import datetime
 from auth_landing import load_user_data, save_user_data
 
 # ---- CONFIG ----
-api_key = st.secrets["GOOGLE_AI_KEY"]
+api_key = st.secrets["API_KEY"]
 API_KEY = "My_Google_Gemini_API_Key"  # Replace with your actual API key
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
@@ -398,4 +398,5 @@ def update_user_progress(user_data, user_input):
         st.success("Badge earned: Career Explorer!")
     user_data['badges'] = badges
     user_data['last_active'] = datetime.now().isoformat()
+
 
