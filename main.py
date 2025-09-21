@@ -1,5 +1,5 @@
 """
-Redesigned Zyra AI Career Advisor
+Designed Zyra AI Personalized Career Advisor
 Modern UI with clean top navigation and streamlined layout
 """
 import streamlit as st
@@ -868,3 +868,4 @@ def render_career_page(user_data):
 
 if __name__ == "__main__":
     main()
+
