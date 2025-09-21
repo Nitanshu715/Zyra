@@ -14,10 +14,6 @@
   <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" />
 </p>
 
-<p align="center">
-  <img src="https://readme-typing-svg.demolab.com/?lines=Smart+Career+Guidance;Resume+Analysis+%26+Skill+Mapping;Interview+Preparation+Tips;Adaptive+Roadmaps+for+Growth&font=Fira%20Code&center=true&width=550&height=45&color=00C9A7&vCenter=true&pause=1000" />
-</p>
-
 ---
 
 ## 📌 About Zyra
@@ -73,6 +69,7 @@ AI & Tools:
 
 ## 📂 Project Structure
 
+```plaintext
 Zyra/
 ├── main.py                 # Entry point
 ├── auth_landing.py         # Authentication
@@ -82,6 +79,7 @@ Zyra/
 ├── requirements.txt        # Dependencies
 ├── logo.png                # App logo
 └── photos/                 # Screenshots
+
 
 ---
 
@@ -102,15 +100,6 @@ pip install -r requirements.txt
 # Run app
 streamlit run main.py
 ```
-
----
-
-## 📸 Screenshots
-
-<p align="center">
-  <img src="photos/login_page.png" width="400" />
-  <img src="photos/chat_interface.png" width="400" />
-</p>
 
 ---
 
@@ -137,5 +126,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-<p align="center">Made with ❤️ by <a href="https://github.com/Nitanshu715">Nitanshu</a></p>
+<p align="center">Made by <a href="https://www.linkedin.com/in/nitanshu-tak-89a1ba289/">Nitanshu Tak</a> and <a href="https://www.linkedin.com/in/khushkushwaha45/"> Khushi Kushwaha</a></p>
 
