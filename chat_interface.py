@@ -134,7 +134,7 @@ def load_chat_css():
         margin-left: 0;
     }
     button, .stButton > button {
-    box-shadow: none !important;
+        box-shadow: none !important;
     }
     .input-area-section {
         background: rgba(245, 247, 255, 1);
@@ -330,7 +330,7 @@ def process_chat_message(user_input, user_data):
         save_user_data(st.session_state.username, user_data)
         st.session_state.processing_message = False
         st.rerun()
-    except Exception as e:
+        except Exception as e:
         st.session_state.processing_message = False
         st.error("I'm having trouble processing your message right now. Please try again in a moment.")
         st.error(f"Technical details: {str(e)}")
@@ -397,6 +397,7 @@ def update_user_progress(user_data, user_input):
         st.success("Badge earned: Career Explorer!")
     user_data['badges'] = badges
     user_data['last_active'] = datetime.now().isoformat()
+
 
 
 
