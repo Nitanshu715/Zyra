@@ -1,5 +1,5 @@
 """
-Redesigned Profile Management Module for Zyra AI Career Advisor
+Designed Profile Management Module for Zyra AI Personalized Career Advisor
 Clean, modern profile interface with better organization and visual hierarchy
 """
 import streamlit as st
@@ -270,6 +270,11 @@ def load_profile_css():
         padding: 12px 20px;
         border: none;
         transition: all 0.3s ease;
+    }
+    
+    .stSelectbox > div[data-baseweb="select"] > div {
+        display: flex !important;
+        align-items: center !important;
     }
     
     .stTabs [aria-selected="true"] {
@@ -720,4 +725,5 @@ def render_achievements_tab(user_data):
     else:
         st.info("Start using Zyra to earn your first badges!")
     
+
     st.markdown('</div>', unsafe_allow_html=True)
