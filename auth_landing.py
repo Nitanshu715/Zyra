@@ -94,7 +94,7 @@ def init_user_data(username):
                 'SQL': 0,
                 'React': 0,
                 'Machine Learning': 0
-            },
+        },
             'soft': {
                 'Communication': 50,
                 'Teamwork': 50,
@@ -103,19 +103,19 @@ def init_user_data(username):
                 'Time Management': 40,
                 'Adaptability': 45
             }
-        },
-        'goals_tracking': {
-            'short_term': [],
-            'long_term': [],
-            'completed': []
-        },
-        'chat_history': [],
-        'xp': 0,
-        'level': 1,
-        'badges': ['New Member'],
-        'streak': 1,
-        'last_active': datetime.now().isoformat()
-    }
+            },
+            'goals_tracking': {
+                    'short_term': [],
+                    'long_term': [],
+                    'completed': []
+                },
+                'chat_history': [],
+                'xp': 0,
+                'level': 1,
+                'badges': ['New Member'],
+                'streak': 1,
+                'last_active': datetime.now().isoformat()
+            }
 
 def get_logo_base64():
     """Get base64 encoded logo if it exists"""
@@ -158,152 +158,152 @@ def load_css():
         position: relative;
         z-index: 100;
     }}
-    button, .stButton > button {{
-    box-shadow: none !important;
-    }}
-    /* Tabs drag up and spacing */
-    .stTabs {{
-        margin-top: -35px !important;
-        margin-bottom: 1rem !important;
-    }}
-    .stTabs [data-baseweb="tab-list"] {{
-        gap: 10px;
-        background: rgba(241, 245, 249, 0.8) !important;
-        border-radius: 15px;
-        padding: 5px;
-        margin-bottom: 0.5rem;
-    }}
-    .stTabs [data-baseweb="tab"] {{
-        background: transparent !important;
-        border-radius: 12px;
-        color: #64748b !important;
-        font-weight: 500;
-        padding: 12px 25px;
-        border: none;
-        transition: all 0.3s ease;
-    }}
-    .stTabs [aria-selected="true"] {{
-        background: linear-gradient(135deg, #667eea, #764ba2) !important;
-        color: white !important;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    }}
-    /* Form fields spacing and centering fix */
-    .stTextInput, .stPasswordInput {{
-        margin-bottom: 10px !important;
-    }}
-    .stTextInput > div > div > input,
-    .stPasswordInput > div > div > input {{
-        border: 2px solid rgba(148, 163, 184, 0.3) !important;
-        border-radius: 15px !important;
-        padding: 15px 20px !important;
-        font-size: 1rem !important;
-        transition: all 0.3s ease !important;
-        background: rgba(255, 255, 255, 0.9) !important;
-        width: 100% !important;
-        margin-bottom: 10px !important;
-        color: #222 !important;
-        text-align: left !important;
-        /* Center vertically in the input box */
-        display: flex !important;
-        align-items: center !important;
-        height: 48px !important;
-    }}
-    /* Fix label color and visibility */
-    label, .stTextInput label, .stPasswordInput label {{
-        color: #fff !important;
-        font-weight: 500 !important;
-        font-size: 1rem !important;
-    }}
-    /* Placeholder text style (grey and left aligned) */
-    ::placeholder {{
-        color: #bdbdbd !important;
-        opacity: 1 !important;
-        font-size: 1rem !important;
-        text-align: left !important;
-    }}
-    /* Fix the icon color for password field */
-    .stPasswordInput svg {{
-        color: #64748b !important;
-    }}
-    .stTextInput > div > div > input:focus,
-    .stPasswordInput > div > div > input:focus {{
-        border-color: #667eea !important;
-        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1) !important;
-        outline: none !important;
-    }}
-    .stButton > button {{
-        background: linear-gradient(135deg, #667eea, #764ba2) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 15px !important;
-        padding: 15px 30px !important;
-        font-weight: 600 !important;
-        font-size: 1rem !important;
-        width: 100% !important;
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3) !important;
-        transition: all 0.3s ease !important;
-        margin: 10px 0 !important;
-    }}
-    .stButton > button:hover {{
-        transform: translateY(-3px) !important;
-        box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4) !important;
-    }}
-    .stButton > button:active {{
-        transform: translateY(-1px) !important;
-    }}
-    /* SUCCESS AND ERROR MESSAGES */
-    .stAlert {{
-        background: rgba(255, 255, 255, 0.95) !important;
-        border-radius: 15px !important;
-        margin: 15px 0 !important;
-        border: none !important;
-        backdrop-filter: blur(10px) !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
-    }}
-    .stAlert[data-baseweb="notification"] {{
-        background: rgba(255, 255, 255, 0.95) !important;
-    }}
-    /* Hide Streamlit branding */
-    #MainMenu {{visibility: hidden;}}
-    footer {{visibility: hidden;}}
-    header {{visibility: hidden;}}
-    .stDeployButton {{visibility: hidden;}}
-    /* Force remove any remaining white backgrounds */
-    .css-1d391kg, .css-1y4p8pa, .css-12oz5g7, .css-1lcbmhc {{
-        background: transparent !important;
-    }}
-    .block-container {{
-        padding-top: 1rem !important;
-        padding-bottom: 1rem !important;
-    }}
-    /* Logo area - make logo 2x bigger */
-    .logo-container {{
-        text-align: center;
-        padding: 0rem 0 1rem 0;
-        background: transparent !important;
-    }}
-    .logo-image {{
-        width: 560px;
-        height: 360px;
-        border-radius: 50px;
-        filter: drop-shadow(0 20px 80px rgba(255, 255, 255, 0.3));
-        animation: logoFloat 6s ease-in-out infinite;
-    }}
-    .logo-fallback {{
-        font-size: 16rem;
-        animation: logoFloat 6s ease-in-out infinite;
-        color: white;
-    }}
-    @keyframes logoFloat {{
-        0%, 100% {{
-            transform: translateY(0px);
+        button, .stButton > button {{
+        box-shadow: none !important;
         }}
-        50% {{
+        /* Tabs drag up and spacing */
+        .stTabs {{
+            margin-top: -35px !important;
+            margin-bottom: 1rem !important;
+    }}
+        .stTabs [data-baseweb="tab-list"] {{
+            gap: 10px;
+            background: rgba(241, 245, 249, 0.8) !important;
+            border-radius: 15px;
+            padding: 5px;
+            margin-bottom: 0.5rem;
+    }}
+        .stTabs [data-baseweb="tab"] {{
+            background: transparent !important;
+            border-radius: 12px;
+            color: #64748b !important;
+            font-weight: 500;
+            padding: 12px 25px;
+            border: none;
+            transition: all 0.3s ease;
+    }}
+        .stTabs [aria-selected="true"] {{
+            background: linear-gradient(135deg, #667eea, #764ba2) !important;
+            color: white !important;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }}
+        /* Form fields spacing and centering fix */
+        .stTextInput, .stPasswordInput {{
+            margin-bottom: 10px !important;
+    }}
+        .stTextInput > div > div > input,
+        .stPasswordInput > div > div > input {{
+            border: 2px solid rgba(148, 163, 184, 0.3) !important;
+            border-radius: 15px !important;
+            padding: 15px 20px !important;
+            font-size: 1rem !important;
+            transition: all 0.3s ease !important;
+            background: rgba(255, 255, 255, 0.9) !important;
+            width: 100% !important;
+            margin-bottom: 10px !important;
+            color: #222 !important;
+            text-align: left !important;
+            /* Center vertically in the input box */
+            display: flex !important;
+            align-items: center !important;
+            height: 48px !important;
+    }}
+        /* Fix label color and visibility */
+        label, .stTextInput label, .stPasswordInput label {{
+            color: #fff !important;
+            font-weight: 500 !important;
+            font-size: 1rem !important;
+    }}
+        /* Placeholder text style (grey and left aligned) */
+        ::placeholder {{
+            color: #bdbdbd !important;
+            opacity: 1 !important;
+            font-size: 1rem !important;
+            text-align: left !important;
+    }}
+        /* Fix the icon color for password field */
+        .stPasswordInput svg {{
+            color: #64748b !important;
+    }}
+        .stTextInput > div > div > input:focus,
+        .stPasswordInput > div > div > input:focus {{
+            border-color: #667eea !important;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1) !important;
+            outline: none !important;
+    }}
+        .stButton > button {{
+            background: linear-gradient(135deg, #667eea, #764ba2) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 15px !important;
+            padding: 15px 30px !important;
+            font-weight: 600 !important;
+            font-size: 1rem !important;
+            width: 100% !important;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3) !important;
+            transition: all 0.3s ease !important;
+            margin: 10px 0 !important;
+    }}
+        .stButton > button:hover {{
+            transform: translateY(-3px) !important;
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4) !important;
+    }}
+        .stButton > button:active {{
+            transform: translateY(-1px) !important;
+    }}
+        /* SUCCESS AND ERROR MESSAGES */
+        .stAlert {{
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-radius: 15px !important;
+            margin: 15px 0 !important;
+            border: none !important;
+            backdrop-filter: blur(10px) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+    }}
+        .stAlert[data-baseweb="notification"] {{
+            background: rgba(255, 255, 255, 0.95) !important;
+    }}
+        /* Hide Streamlit branding */
+        #MainMenu {{visibility: hidden;}}
+        footer {{visibility: hidden;}}
+        header {{visibility: hidden;}}
+        .stDeployButton {{visibility: hidden;}}
+        /* Force remove any remaining white backgrounds */
+        .css-1d391kg, .css-1y4p8pa, .css-12oz5g7, .css-1lcbmhc {{
+            background: transparent !important;
+    }}
+        .block-container {{
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
+    }}
+        /* Logo area - make logo 2x bigger */
+        .logo-container {{
+            text-align: center;
+            padding: 0rem 0 1rem 0;
+            background: transparent !important;
+    }}
+        .logo-image {{
+            width: 560px;
+            height: 360px;
+            border-radius: 50px;
+            filter: drop-shadow(0 20px 80px rgba(255, 255, 255, 0.3));
+            animation: logoFloat 6s ease-in-out infinite;
+    }}
+        .logo-fallback {{
+            font-size: 16rem;
+            animation: logoFloat 6s ease-in-out infinite;
+            color: white;
+    }}
+        @keyframes logoFloat {{
+            0%, 100% {{
+                transform: translateY(0px);
+        }}
+            50% {{
             transform: translateY(-30px);
         }}
     }}
-    </style>
-    """, unsafe_allow_html=True)
+        </style>
+        """, unsafe_allow_html=True)
 
 def login_page():
     """Modern redesigned login page"""
