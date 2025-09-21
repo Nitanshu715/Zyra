@@ -79,7 +79,7 @@ Zyra/
 ├── requirements.txt        # Dependencies
 ├── logo.png                # App logo
 └── photos/                 # Screenshots
-
+```
 
 ---
 
