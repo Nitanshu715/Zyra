@@ -1,4 +1,4 @@
-<h1 align="center">🤖 Zyra – Your AI Career Companion</h1>
+<h1 align="center">🤖 Zyra – Your AI Personalized Career and Skills Advisor</h1>
 <p align="center">
   <em>AI-powered chatbot for personalized career growth & guidance</em><br>
   <strong>🌐 Built with Python, Streamlit, NLP & Recommendation Systems</strong>
