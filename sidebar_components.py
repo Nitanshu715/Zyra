@@ -1,5 +1,5 @@
 """
-Clean Sidebar Components for Zyra AI Career Advisor
+Clean Navigation Bar Components for Zyra AI Career Advisor
 Simple navigation with external links and basic functionality
 """
 import streamlit as st
@@ -8,7 +8,7 @@ from datetime import datetime
 from auth_landing import save_users, load_users
 
 def load_sidebar_css():
-    """Clean CSS for sidebar"""
+    """Clean CSS for Navigationbar"""
     st.markdown("""
     <style>
     .sidebar-logo {
@@ -281,4 +281,5 @@ def export_user_data(user_data):
         data=json_data,
         file_name=f"zyra_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
         mime="application/json"
+
     )
