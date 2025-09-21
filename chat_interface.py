@@ -330,7 +330,7 @@ def process_chat_message(user_input, user_data):
         save_user_data(st.session_state.username, user_data)
         st.session_state.processing_message = False
         st.rerun()
-        except Exception as e:
+    except Exception as e:
         st.session_state.processing_message = False
         st.error("I'm having trouble processing your message right now. Please try again in a moment.")
         st.error(f"Technical details: {str(e)}")
