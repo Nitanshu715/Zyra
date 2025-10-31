@@ -7,7 +7,7 @@ from auth_landing import load_user_data, save_user_data
 # ---- CONFIG ----
 API_KEY = st.secrets["API_KEY"]
 genai.configure(api_key=API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel(model_name="models/gemini-2.5-flash")
 
 def load_chat_css():
     """Big box, chat and chatbox ALWAYS inside the box, welcome disappears after first message, old chats never show outside box"""
@@ -397,6 +397,7 @@ def update_user_progress(user_data, user_input):
         st.success("Badge earned: Career Explorer!")
     user_data['badges'] = badges
     user_data['last_active'] = datetime.now().isoformat()
+
 
 
 
