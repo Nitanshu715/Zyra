@@ -134,7 +134,7 @@ def load_chat_css():
         margin-left: 0;
     }
     button, .stButton > button {
-        box-shadow: none !important;
+    box-shadow: none !important;
     }
     .input-area-section {
         background: rgba(245, 247, 255, 1);
@@ -287,13 +287,14 @@ def render_chat_interface(user_data):
         
         # This is the form, which must be INSIDE the boundary.
         # It's placed directly after the chat content area.
-       with st.form("chat_form", clear_on_submit=True):
-       user_input = st.text_area(
-            "Chat input", 
-            key="user_input",
-            placeholder="Type your message...", 
-            label_visibility="collapsed"
-        )
+        with st.form("chat_form", clear_on_submit=True):
+            user_input = st.text_area(
+                "",
+                placeholder="Type your message here...",
+                height=70,
+                key="chat_input",
+                label_visibility="collapsed",
+            )
             # Wrap form content in the input-area-section div
             send_button = st.form_submit_button("Send Message 🚀", type="primary")
             st.markdown('</div>', unsafe_allow_html=True)
@@ -392,17 +393,7 @@ def update_user_progress(user_data, user_input):
         st.success("Badge earned: Regular User!")
     if chat_count >= 25 and "Career Explorer" not in badges:
         badges.append("Career Explorer")
-        user_data['xp'] += 100
+        user_data['xp'] += 101
         st.success("Badge earned: Career Explorer!")
     user_data['badges'] = badges
     user_data['last_active'] = datetime.now().isoformat()
-
-
-
-
-
-
-
-
-
-
