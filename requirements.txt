@@ -2,7 +2,6 @@ streamlit
 google-generativeai
 plotly
 pandas
-hashlib2
 Pylance
 os
 base64
@@ -10,3 +9,4 @@ google-generativeai>=0.8.3
 streamlit>=1.38.0
 protobuf>=5.27.0
 python-dotenv
+
