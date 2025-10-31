@@ -289,12 +289,11 @@ def render_chat_interface(user_data):
         # It's placed directly after the chat content area.
        with st.form("chat_form", clear_on_submit=True):
        user_input = st.text_area(
-        "User Input",  # <-- give it a name here
-        placeholder="Type your message here...",
-        height=70,
-        key="chat_input",
-        label_visibility="collapsed",  # keeps it hidden visually
-    )
+            "Chat input", 
+            key="user_input",
+            placeholder="Type your message...", 
+            label_visibility="collapsed"
+        )
             # Wrap form content in the input-area-section div
             send_button = st.form_submit_button("Send Message 🚀", type="primary")
             st.markdown('</div>', unsafe_allow_html=True)
@@ -397,6 +396,7 @@ def update_user_progress(user_data, user_input):
         st.success("Badge earned: Career Explorer!")
     user_data['badges'] = badges
     user_data['last_active'] = datetime.now().isoformat()
+
 
 
 
