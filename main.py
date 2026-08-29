@@ -22,6 +22,17 @@ def get_logo_base64():
     except:
         return None
 
+def render_app_footer():
+    st.markdown("""
+    <div style="text-align: center; padding: 2.5rem 0 1rem 0; color: #64748b; font-size: 0.84rem; border-top: 1px solid rgba(255, 255, 255, 0.06); margin-top: 2rem;">
+        Made by 
+        <a href="https://www.linkedin.com/in/nitanshu-tak-89a1ba289/" target="_blank" style="color: #a5b4fc; text-decoration: none; font-weight: 700; transition: color 0.2s ease;">Nitanshu Tak</a> 
+        & 
+        <a href="https://www.linkedin.com/in/khushkushwaha45/" target="_blank" style="color: #f472b6; text-decoration: none; font-weight: 700; transition: color 0.2s ease;">Khushi Kushwaha</a>
+        <div style="font-size: 0.74rem; color: #475569; margin-top: 4px;">Zyra AI © 2026 • Intelligent Career Strategy Engine</div>
+    </div>
+    """, unsafe_allow_html=True)
+
 def load_global_css():
     st.markdown("""
     <style>
@@ -327,6 +338,7 @@ def main_dashboard():
     else:
         render_chat_interface(user_data)
 
+    render_app_footer()
     save_user_data(st.session_state.username, user_data)
 
 def render_header_and_navigation(user_data):
@@ -411,7 +423,6 @@ def render_chat_history_view(user_data):
     """, unsafe_allow_html=True)
 
     if not chat_history:
-        # Welcoming Empty State Card with Direct CTA Button
         st.markdown("""
         <div style="background: rgba(15, 20, 32, 0.85); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 3.5rem 2rem; text-align: center; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);">
             <div style="width: 60px; height: 60px; margin: 0 auto 1.25rem auto; border-radius: 18px; background: rgba(99, 102, 241, 0.12); border: 1.5px solid rgba(99, 102, 241, 0.3); display: flex; align-items: center; justify-content: center; color: #818cf8;">
@@ -495,7 +506,6 @@ def render_analytics_view(user_data):
     badges_count = len(user_data.get('badges', []))
     completed_goals = len(user_data.get('goals_tracking', {}).get('completed', []))
 
-    # 4 Glowing Metric Cards with SVGs
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         st.markdown(f"""
@@ -528,7 +538,6 @@ def render_analytics_view(user_data):
 
     st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
     
-    # Skills Mastery Grid with Progress Fillers
     tech_skills = user_data.get('skills', {}).get('technical', {})
     if tech_skills:
         st.markdown("""

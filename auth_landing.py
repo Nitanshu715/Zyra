@@ -235,7 +235,6 @@ def load_auth_css():
         text-align: left;
     }
 
-    /* Modern Glass Card */
     [data-testid="stForm"] {
         background: rgba(15, 20, 32, 0.85) !important;
         backdrop-filter: blur(30px) !important;
@@ -259,7 +258,6 @@ def load_auth_css():
         margin-bottom: 1.5rem;
     }
 
-    /* Sleek Rounded Pill Switcher */
     .stTabs [data-baseweb="tab-list"] {
         display: flex !important;
         width: 100% !important;
@@ -301,14 +299,12 @@ def load_auth_css():
         box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4) !important;
     }
 
-    /* Remove Ugly Instructions / "Press Enter to submit form" */
     [data-testid="InputInstructions"],
     .stTextInput [data-testid="InputInstructions"],
     .stPasswordInput [data-testid="InputInstructions"] {
         display: none !important;
     }
 
-    /* Deep Input Fixes */
     [data-baseweb="base-input"],
     [data-baseweb="input"] {
         background: rgba(9, 13, 22, 0.95) !important;
@@ -339,7 +335,6 @@ def load_auth_css():
         color: #64748b !important;
     }
 
-    /* Restore Material Icons for Password Eye Button */
     .stPasswordInput button {
         background: transparent !important;
         border: none !important;
@@ -360,7 +355,6 @@ def load_auth_css():
         margin-bottom: 0.35rem !important;
     }
 
-    /* Buttons */
     .stButton > button,
     div[data-testid="stFormSubmitButton"] > button {
         border-radius: 14px !important;
@@ -498,6 +492,17 @@ def login_page():
             
         with tab_signup:
             render_signup_tab()
+
+    # Footer
+    st.markdown("""
+    <div style="text-align: center; padding: 2rem 0 1rem 0; color: #64748b; font-size: 0.84rem; border-top: 1px solid rgba(255, 255, 255, 0.06); margin-top: 2.5rem;">
+        Made by 
+        <a href="https://www.linkedin.com/in/nitanshu-tak-89a1ba289/" target="_blank" style="color: #a5b4fc; text-decoration: none; font-weight: 700;">Nitanshu Tak</a> 
+        & 
+        <a href="https://www.linkedin.com/in/khushkushwaha45/" target="_blank" style="color: #f472b6; text-decoration: none; font-weight: 700;">Khushi Kushwaha</a>
+        <div style="font-size: 0.74rem; color: #475569; margin-top: 4px;">Zyra AI © 2026 • Intelligent Career Strategy Engine</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 def render_login_tab():
     with st.form("login_form", clear_on_submit=False):
