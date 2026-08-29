@@ -6,26 +6,40 @@ import requests
 from datetime import datetime
 from auth_landing import load_user_data, save_user_data
 
+def sanitize_key(val):
+    if not val:
+        return ""
+    s = str(val).strip().strip('\'"').strip()
+    if "=" in s and ("API_KEY" in s or "KEY" in s):
+        s = s.split("=", 1)[1].strip().strip('\'"').strip()
+    return s
+
 def get_api_key():
-    """Dynamically resolve API key from all possible Streamlit Cloud secrets & env variables"""
+    """Dynamically resolve and sanitize API key from all possible Streamlit Cloud secrets & env variables"""
     # 1. Streamlit Secrets (Flat and Nested)
     try:
         if hasattr(st, "secrets"):
             for k in ["API_KEY", "GEMINI_API_KEY", "GOOGLE_API_KEY", "api_key", "gemini_api_key"]:
                 if k in st.secrets and st.secrets[k]:
-                    return str(st.secrets[k]).strip()
+                    clean = sanitize_key(st.secrets[k])
+                    if clean:
+                        return clean
             if "general" in st.secrets:
                 for k in ["API_KEY", "GEMINI_API_KEY", "GOOGLE_API_KEY", "api_key"]:
                     if k in st.secrets["general"] and st.secrets["general"][k]:
-                        return str(st.secrets["general"][k]).strip()
+                        clean = sanitize_key(st.secrets["general"][k])
+                        if clean:
+                            return clean
     except Exception:
         pass
 
     # 2. Environment Variables
     for env_k in ["GEMINI_API_KEY", "API_KEY", "GOOGLE_API_KEY"]:
         val = os.environ.get(env_k)
-        if val and val.strip():
-            return val.strip()
+        if val:
+            clean = sanitize_key(val)
+            if clean:
+                return clean
 
     return None
 
@@ -65,7 +79,7 @@ def query_gemini_api(prompt_text):
     
     last_error = ""
     for model_name in models_to_try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
         try:
             res = requests.post(url, headers=headers, json=payload, timeout=18)
             if res.status_code == 200:
@@ -78,6 +92,9 @@ def query_gemini_api(prompt_text):
             elif res.status_code == 429:
                 last_error = "Rate limit reached on current model. Switching tier..."
                 continue
+            elif res.status_code == 400:
+                last_error = "Invalid API Key configured in Streamlit Cloud Secrets. Please verify your Gemini API key in App Settings -> Secrets."
+                return None, last_error
             else:
                 last_error = f"API status {res.status_code}: {res.text[:150]}"
                 continue
@@ -85,7 +102,7 @@ def query_gemini_api(prompt_text):
             last_error = str(e)
             continue
             
-    return None, f"Unable to generate response ({last_error}). Please check your API key quota or try again in a moment."
+    return None, f"Unable to generate response ({last_error}). Please verify your API key in Streamlit Cloud Secrets."
 
 def load_chat_css():
     st.markdown("""
