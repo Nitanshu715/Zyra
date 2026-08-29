@@ -128,9 +128,8 @@ def load_auth_css():
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap');
 
-    * {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        box-sizing: border-box;
+    body, p, h1, h2, h3, h4, h5, h6, input, button {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
     .stApp {
@@ -143,7 +142,6 @@ def load_auth_css():
         color: #f8fafc;
     }
 
-    /* Wide Split Layout */
     .block-container {
         padding-top: 3.5rem !important;
         padding-bottom: 2rem !important;
@@ -151,28 +149,12 @@ def load_auth_css():
         margin: 0 auto !important;
     }
 
-    /* 3D Animated Coin / Mascot */
     @keyframes coinSpin3D {
-        0% {
-            transform: perspective(1000px) rotateY(0deg) translateY(0px);
-            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4), 0 0 50px rgba(236, 72, 153, 0.2);
-        }
-        25% {
-            transform: perspective(1000px) rotateY(90deg) translateY(-8px);
-            box-shadow: 0 15px 40px rgba(99, 102, 241, 0.6), 0 0 70px rgba(236, 72, 153, 0.35);
-        }
-        50% {
-            transform: perspective(1000px) rotateY(180deg) translateY(0px);
-            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4), 0 0 50px rgba(236, 72, 153, 0.2);
-        }
-        75% {
-            transform: perspective(1000px) rotateY(270deg) translateY(-8px);
-            box-shadow: 0 15px 40px rgba(99, 102, 241, 0.6), 0 0 70px rgba(236, 72, 153, 0.35);
-        }
-        100% {
-            transform: perspective(1000px) rotateY(360deg) translateY(0px);
-            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4), 0 0 50px rgba(236, 72, 153, 0.2);
-        }
+        0% { transform: perspective(1000px) rotateY(0deg) translateY(0px); }
+        25% { transform: perspective(1000px) rotateY(90deg) translateY(-8px); }
+        50% { transform: perspective(1000px) rotateY(180deg) translateY(0px); }
+        75% { transform: perspective(1000px) rotateY(270deg) translateY(-8px); }
+        100% { transform: perspective(1000px) rotateY(360deg) translateY(0px); }
     }
 
     @keyframes floatHero {
@@ -201,8 +183,8 @@ def load_auth_css():
         justify-content: center;
         animation: coinSpin3D 8s linear infinite;
         overflow: hidden;
-        position: relative;
         margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.5), 0 0 60px rgba(236, 72, 153, 0.3);
     }
 
     .coin-img {
@@ -253,7 +235,7 @@ def load_auth_css():
         text-align: left;
     }
 
-    /* Right Form Card */
+    /* Modern Glass Card */
     [data-testid="stForm"] {
         background: rgba(15, 20, 32, 0.85) !important;
         backdrop-filter: blur(30px) !important;
@@ -277,15 +259,21 @@ def load_auth_css():
         margin-bottom: 1.5rem;
     }
 
+    /* Sleek Rounded Pill Switcher */
     .stTabs [data-baseweb="tab-list"] {
         display: flex !important;
         width: 100% !important;
         gap: 6px !important;
-        background: rgba(8, 12, 20, 0.8) !important;
-        border-radius: 14px !important;
-        padding: 4px !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        background: rgba(8, 12, 20, 0.9) !important;
+        border-radius: 9999px !important;
+        padding: 5px !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
         margin-bottom: 1.5rem !important;
+    }
+
+    .stTabs [data-baseweb="tab-highlight"],
+    .stTabs [data-baseweb="tab-border"] {
+        display: none !important;
     }
 
     .stTabs [data-baseweb="tab"] {
@@ -293,13 +281,18 @@ def load_auth_css():
         text-align: center !important;
         justify-content: center !important;
         background: transparent !important;
-        border-radius: 10px !important;
+        border-radius: 9999px !important;
         color: #94a3b8 !important;
         font-weight: 600 !important;
         font-size: 0.9rem !important;
         padding: 9px 0 !important;
         border: none !important;
-        transition: all 0.2s ease !important;
+        transition: all 0.25s ease !important;
+    }
+
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #ffffff !important;
+        background: rgba(255, 255, 255, 0.05) !important;
     }
 
     .stTabs [aria-selected="true"] {
@@ -308,11 +301,19 @@ def load_auth_css():
         box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4) !important;
     }
 
+    /* Remove Ugly Instructions / "Press Enter to submit form" */
+    [data-testid="InputInstructions"],
+    .stTextInput [data-testid="InputInstructions"],
+    .stPasswordInput [data-testid="InputInstructions"] {
+        display: none !important;
+    }
+
+    /* Deep Input Fixes */
     [data-baseweb="base-input"],
     [data-baseweb="input"] {
         background: rgba(9, 13, 22, 0.95) !important;
         border: 1.5px solid rgba(255, 255, 255, 0.12) !important;
-        border-radius: 12px !important;
+        border-radius: 14px !important;
         overflow: hidden !important;
         transition: all 0.2s ease !important;
     }
@@ -338,10 +339,17 @@ def load_auth_css():
         color: #64748b !important;
     }
 
+    /* Restore Material Icons for Password Eye Button */
     .stPasswordInput button {
         background: transparent !important;
         border: none !important;
         color: #94a3b8 !important;
+        cursor: pointer !important;
+    }
+
+    .stPasswordInput button span,
+    .stPasswordInput [data-testid="stIconMaterial"] {
+        font-family: "Material Icons", "Material Symbols Rounded", sans-serif !important;
     }
 
     .stTextInput label,
@@ -352,12 +360,13 @@ def load_auth_css():
         margin-bottom: 0.35rem !important;
     }
 
+    /* Buttons */
     .stButton > button,
     div[data-testid="stFormSubmitButton"] > button {
-        border-radius: 12px !important;
+        border-radius: 14px !important;
         font-weight: 700 !important;
-        font-size: 0.88rem !important;
-        padding: 0.65rem 0.75rem !important;
+        font-size: 0.92rem !important;
+        padding: 0.75rem 1.25rem !important;
         transition: all 0.2s ease !important;
         cursor: pointer !important;
         white-space: nowrap !important;
@@ -366,7 +375,6 @@ def load_auth_css():
     .stButton > button *,
     div[data-testid="stFormSubmitButton"] > button * {
         white-space: nowrap !important;
-        font-size: 0.88rem !important;
     }
 
     button[kind="primaryFormSubmit"],
@@ -385,6 +393,12 @@ def load_auth_css():
     button[data-testid="baseButton-primaryFormSubmit"] *,
     button[data-testid="baseButton-primary"] * {
         color: #ffffff !important;
+    }
+
+    button[kind="primaryFormSubmit"]:hover,
+    button[kind="primary"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(79, 70, 229, 0.6) !important;
     }
 
     button[kind="secondaryFormSubmit"],
@@ -442,7 +456,6 @@ def login_page():
 
     col_hero, col_form = st.columns([1.1, 1.1], gap="large")
 
-    # Left Column: Animated 3D Spinning Coin & Welcoming Showcase
     with col_hero:
         st.markdown(f"""
         <div class="mascot-hero-panel">
@@ -470,7 +483,6 @@ def login_page():
         </div>
         """, unsafe_allow_html=True)
 
-    # Right Column: Login & Signup Form
     with col_form:
         st.markdown("""
         <div style="margin-bottom: 0.5rem;">
