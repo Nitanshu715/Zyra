@@ -6,20 +6,35 @@ import requests
 from datetime import datetime
 from auth_landing import load_user_data, save_user_data
 
-def query_gemini_api(prompt_text):
-    """Direct, fast HTTPS REST call to Gemini v1beta endpoint"""
-    api_key = None
+def get_api_key():
+    """Dynamically resolve API key from all possible Streamlit Cloud secrets & env variables"""
+    # 1. Streamlit Secrets (Flat and Nested)
     try:
-        if "API_KEY" in st.secrets and st.secrets["API_KEY"]:
-            api_key = st.secrets["API_KEY"]
+        if hasattr(st, "secrets"):
+            for k in ["API_KEY", "GEMINI_API_KEY", "GOOGLE_API_KEY", "api_key", "gemini_api_key"]:
+                if k in st.secrets and st.secrets[k]:
+                    return str(st.secrets[k]).strip()
+            if "general" in st.secrets:
+                for k in ["API_KEY", "GEMINI_API_KEY", "GOOGLE_API_KEY", "api_key"]:
+                    if k in st.secrets["general"] and st.secrets["general"][k]:
+                        return str(st.secrets["general"][k]).strip()
     except Exception:
         pass
-        
-    if not api_key:
-        api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("API_KEY") or ""
 
+    # 2. Environment Variables
+    for env_k in ["GEMINI_API_KEY", "API_KEY", "GOOGLE_API_KEY"]:
+        val = os.environ.get(env_k)
+        if val and val.strip():
+            return val.strip()
+
+    return None
+
+def query_gemini_api(prompt_text):
+    """Direct, fast HTTPS REST call with automated multi-tier model fallbacks"""
+    api_key = get_api_key()
+    
     if not api_key:
-        return None, "API Key not configured. Please set API_KEY in .streamlit/secrets.toml or as an environment variable."
+        return None, "API Key is missing. Please add API_KEY to your Streamlit Cloud Secrets (App Settings -> Secrets)."
 
     headers = {
         'Content-Type': 'application/json',
@@ -41,16 +56,18 @@ def query_gemini_api(prompt_text):
     }
     
     models_to_try = [
-        "gemini-flash-latest",
         "gemini-2.5-flash",
         "gemini-3.7-flash",
-        "gemini-pro-latest"
+        "gemini-flash-latest",
+        "gemini-pro-latest",
+        "gemini-2.5-pro"
     ]
     
+    last_error = ""
     for model_name in models_to_try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
         try:
-            res = requests.post(url, headers=headers, json=payload, timeout=20)
+            res = requests.post(url, headers=headers, json=payload, timeout=18)
             if res.status_code == 200:
                 data = res.json()
                 candidates = data.get('candidates', [])
@@ -59,11 +76,16 @@ def query_gemini_api(prompt_text):
                     if parts:
                         return parts[0].get('text', '').strip(), None
             elif res.status_code == 429:
+                last_error = "Rate limit reached on current model. Switching tier..."
                 continue
-        except Exception:
+            else:
+                last_error = f"API status {res.status_code}: {res.text[:150]}"
+                continue
+        except Exception as e:
+            last_error = str(e)
             continue
             
-    return None, "AI service temporarily unavailable. Please try again."
+    return None, f"Unable to generate response ({last_error}). Please check your API key quota or try again in a moment."
 
 def load_chat_css():
     st.markdown("""
@@ -315,7 +337,7 @@ def render_chat_interface(user_data):
         with st.spinner("Thinking..."):
             bot_reply, error_msg = query_gemini_api(ai_prompt)
             if not bot_reply:
-                bot_reply = f"I apologize, I encountered a temporary issue: {error_msg}. Please ask again."
+                bot_reply = f"I apologize, I encountered an issue: {error_msg}"
 
             chat_history.append({
                 'sender': 'bot',
