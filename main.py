@@ -1,871 +1,636 @@
-"""
-Designed Zyra AI Personalized Career Advisor
-Modern UI with clean top navigation and streamlined layout
+﻿"""
+Zyra - AI Personalized Career and Skills Advisor
+Main Application Orchestrator & Dashboard
 """
 import streamlit as st
-from auth_landing import login_page, init_session_state, load_user_data
+import os
+import json
+import base64
+from datetime import datetime
+from auth_landing import login_page, init_session_state, load_user_data, save_user_data
 from chat_interface import render_chat_interface
 from profile_manager import render_profile_manager
-import os
-import base64
+from sidebar_components import render_external_resources_grid
 
+def get_logo_base64():
+    try:
+        if os.path.exists("logo.png"):
+            with open("logo.png", "rb") as f:
+                logo_data = f.read()
+                return base64.b64encode(logo_data).decode()
+        return None
+    except:
+        return None
+
+def load_global_css():
+    st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap');
+
+    * {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        box-sizing: border-box;
+    }
+
+    .stApp {
+        background: #07090e !important;
+        background-image: 
+            radial-gradient(at 15% 15%, rgba(99, 102, 241, 0.18) 0px, transparent 45%),
+            radial-gradient(at 85% 15%, rgba(236, 72, 153, 0.12) 0px, transparent 45%),
+            radial-gradient(at 50% 90%, rgba(6, 182, 212, 0.12) 0px, transparent 50%) !important;
+        background-attachment: fixed !important;
+        color: #f8fafc;
+    }
+
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 2.5rem !important;
+        max-width: 95% !important;
+        width: 95% !important;
+    }
+
+    [data-testid="stBottom"],
+    .stBottomBlockContainer,
+    footer,
+    header,
+    #MainMenu {
+        background: transparent !important;
+        background-color: transparent !important;
+    }
+
+    [data-testid="stBottom"] > div {
+        background: transparent !important;
+        background-color: transparent !important;
+    }
+
+    [data-testid="stChatInput"] {
+        background: rgba(15, 23, 42, 0.94) !important;
+        border: 1.5px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 16px !important;
+        backdrop-filter: blur(25px) !important;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6) !important;
+        padding: 4px 6px !important;
+    }
+
+    [data-testid="stChatInput"] textarea {
+        color: #f8fafc !important;
+        font-size: 0.96rem !important;
+        background: transparent !important;
+    }
+
+    [data-testid="stChatInput"] textarea::placeholder {
+        color: #94a3b8 !important;
+    }
+
+    [data-testid="stChatInput"] button {
+        background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+        color: white !important;
+        border-radius: 10px !important;
+        border: none !important;
+    }
+
+    /* Top Brand Bar */
+    .top-header-bar {
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 18px;
+        padding: 0.85rem 1.75rem;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .brand-section {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .brand-logo-frame {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #4f46e5, #db2777);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border: 1.5px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+    }
+
+    .brand-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, #ffffff 0%, #c7d2fe 60%, #f472b6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: -0.03em;
+        margin: 0;
+        line-height: 1.1;
+    }
+
+    .user-profile-badge {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(11, 17, 32, 0.85);
+        padding: 6px 16px 6px 8px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .user-avatar-circle {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        color: white;
+        font-weight: 800;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 10px rgba(79, 70, 229, 0.4);
+    }
+
+    /* Buttons */
+    .stButton > button {
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        font-size: 0.88rem !important;
+        padding: 0.55rem 0.9rem !important;
+        transition: all 0.2s ease !important;
+        border: none !important;
+        white-space: nowrap !important;
+    }
+
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+        color: white !important;
+        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4) !important;
+    }
+
+    .stButton > button[kind="primary"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6) !important;
+    }
+
+    .stButton > button[kind="secondary"] {
+        background: rgba(18, 24, 38, 0.85) !important;
+        color: #cbd5e1 !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .stButton > button[kind="secondary"]:hover {
+        background: rgba(30, 41, 59, 0.95) !important;
+        color: #ffffff !important;
+        border-color: rgba(99, 102, 241, 0.4) !important;
+        transform: translateY(-2px);
+    }
+
+    /* Modern Banner Card */
+    .glass-card-panel {
+        background: rgba(15, 20, 32, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 1.75rem 2rem;
+        backdrop-filter: blur(25px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        margin-bottom: 1.5rem;
+    }
+
+    .panel-header-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #f8fafc;
+        margin: 0 0 0.3rem 0;
+    }
+
+    .panel-header-desc {
+        color: #94a3b8;
+        font-size: 0.92rem;
+        margin: 0;
+    }
+
+    /* Dynamic Metrics Cards */
+    .metric-card-glow {
+        background: rgba(15, 20, 32, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 18px;
+        padding: 1.6rem 1.4rem;
+        text-align: center;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        transition: all 0.25s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .metric-card-glow::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #4f46e5, #ec4899);
+        opacity: 0.8;
+    }
+
+    .metric-card-glow:hover {
+        border-color: rgba(99, 102, 241, 0.45);
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(99, 102, 241, 0.2);
+    }
+
+    .metric-val-lead {
+        font-family: 'Outfit', sans-serif;
+        font-size: 2.6rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, #ffffff 0%, #c7d2fe 50%, #f472b6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.25rem;
+    }
+
+    .metric-label-lead {
+        color: #94a3b8;
+        font-size: 0.88rem;
+        font-weight: 600;
+    }
+
+    /* Skill Item Meter */
+    .skill-stat-card {
+        background: rgba(11, 17, 32, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s ease;
+    }
+
+    .skill-stat-card:hover {
+        border-color: rgba(99, 102, 241, 0.4);
+        transform: translateY(-2px);
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 def main():
-    """Main application entry point"""
     st.set_page_config(
         page_title="Zyra - AI Career Advisor", 
-        page_icon="🤖",
+        page_icon="⚡",
         layout="wide",
         initial_sidebar_state="collapsed"
     )
     
-    # Initialize session state
     init_session_state()
-    
-    # Initialize externals modal state
-    if 'show_externals' not in st.session_state:
-        st.session_state.show_externals = False
-    
-    # Route to appropriate page
+    load_global_css()
+
     if not st.session_state.logged_in:
         login_page()
     else:
         main_dashboard()
 
 def main_dashboard():
-    """Main dashboard with clean unified layout"""
     user_data = load_user_data(st.session_state.username)
-    
     if not user_data:
-        st.error("User data not found. Please login again.")
+        st.error("Session expired. Please log in again.")
         st.session_state.logged_in = False
         st.rerun()
         return
-    
-    # Update user activity
-    from datetime import datetime
+
     user_data['last_active'] = datetime.now().isoformat()
     
-    # Render unified top navigation with welcome
-    render_unified_header(user_data)
+    render_header_and_navigation(user_data)
     
-    # Render externals modal if open (before main content)
-    if st.session_state.get('show_externals', False):
-        render_externals_modal()
+    curr_tab = st.session_state.get('current_page', 'chatroom')
     
-    # Main content area
-    render_main_content(user_data)
-    
-    # Render floating logout button
-    render_floating_logout()
-    
-    # Save updated user data
-    from auth_landing import save_user_data
+    if curr_tab == 'chatroom':
+        render_chat_interface(user_data)
+    elif curr_tab == 'history':
+        render_chat_history_view(user_data)
+    elif curr_tab == 'profile':
+        render_profile_manager(user_data)
+    elif curr_tab == 'analytics':
+        render_analytics_view(user_data)
+    elif curr_tab == 'career':
+        render_career_explorer_view(user_data)
+    elif curr_tab == 'externals':
+        render_externals_view(user_data)
+    else:
+        render_chat_interface(user_data)
+
     save_user_data(st.session_state.username, user_data)
 
-def render_unified_header(user_data):
-    """Render clean unified header with navigation and welcome"""
-    st.markdown("""
-    <style>
-    .unified-header {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        padding: 1.5rem 2rem;
-        margin-bottom: 2rem;
-        border-radius: 0 0 25px 25px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    }
-    .header-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        max-width: 1200px;
-        margin: 0 auto;
-        position: relative;
-    }
-    .welcome-section {
-        flex: 1;
-    }
-    .welcome-title {
-        font-size: 2.2rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin: 0 0 0.5rem 0;
-    }
-    .welcome-subtitle {
-        color: #64748b;
-        font-size: 1.1rem;
-        font-weight: 400;
-        margin: 0;
-    }
-    .logo-container {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 10;
-    }
-    .logo-image {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        box-shadow: 0 0 30px rgba(102, 126, 234, 0.6), 
-                    0 0 60px rgba(102, 126, 234, 0.4),
-                    0 0 90px rgba(102, 126, 234, 0.2);
-        animation: logoGlow 3s ease-in-out infinite alternate;
-        transition: all 0.3s ease;
-    }
-    .logo-image:hover {
-        transform: scale(1.1);
-        box-shadow: 0 0 40px rgba(102, 126, 234, 0.8), 
-                    0 0 80px rgba(102, 126, 234, 0.6),
-                    0 0 120px rgba(102, 126, 234, 0.4);
-    }
-    @keyframes logoGlow {
-        0% {
-            box-shadow: 0 0 30px rgba(102, 126, 234, 0.6), 
-                        0 0 60px rgba(102, 126, 234, 0.4),
-                        0 0 90px rgba(102, 126, 234, 0.2);
-        }
-        100% {
-            box-shadow: 0 0 40px rgba(102, 126, 234, 0.8), 
-                        0 0 80px rgba(102, 126, 234, 0.6),
-                        0 0 120px rgba(102, 126, 234, 0.4);
-        }
-    }
-    .user-profile {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        background: rgba(102, 126, 234, 0.1);
-        padding: 0.75rem 1.25rem;
-        border-radius: 18px;
-        border: 2px solid rgba(102, 126, 234, 0.2);
-        transition: all 0.3s ease;
-    }
-    .user-profile:hover {
-        background: rgba(102, 126, 234, 0.15);
-        box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
-    }
-    .user-avatar {
-        width: 45px;
-        height: 45px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: 600;
-        font-size: 1.3rem;
-    }
-    .user-info {
-        display: flex;
-        flex-direction: column;
-    }
-    .user-name {
-        font-weight: 600;
-        color: #2d3748;
-        margin: 0;
-        font-size: 1.1rem;
-    }
-    .user-level {
-        font-size: 0.85rem;
-        color: #718096;
-        margin: 0;
-    }
-    /* Fixed hover effects for buttons - removed harsh shadow */
-    .stButton > button {
-        background: transparent !important;
-        border: 2px solid rgba(102, 126, 234, 0.2) !important;
-        border-radius: 12px !important;
-        color: #4a5568 !important;
-        font-weight: 500 !important;
-        padding: 0.75rem 1.25rem !important;
-        margin: 0 0.5rem !important;
-        transition: all 0.3s ease !important;
-        font-size: 0.95rem !important;
-        box-shadow: none !important;
-    }
-    .stButton > button:hover {
-        background: linear-gradient(135deg, #667eea, #764ba2) !important;
-        color: white !important;
-        border-color: transparent !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 0 15px rgba(102, 126, 234, 0.4) !important;
-    }
-    .stButton > button:focus {
-        box-shadow: 0 0 15px rgba(102, 126, 234, 0.4) !important;
-        outline: none !important;
-    }
-    /* Remove default streamlit button focus ring */
-    .stButton > button:focus:not(:focus-visible) {
-        box-shadow: 0 0 15px rgba(102, 126, 234, 0.4) !important;
-    }
-    /* Enhanced floating logout button with glow */
-    .floating-logout-btn {
-        position: fixed !important;
-        bottom: 30px !important;
-        right: 30px !important;
-        z-index: 1000 !important;
-        background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 50% !important;
-        width: 65px !important;
-        height: 65px !important;
-        font-size: 1.6rem !important;
-        box-shadow: 0 0 20px rgba(220, 38, 38, 0.6), 0 4px 20px rgba(220, 38, 38, 0.4) !important;
-        transition: all 0.3s ease !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        animation: floatingGlow 3s ease-in-out infinite !important;
-        cursor: pointer !important;
-    }
-    @keyframes floatingGlow {
-        0%, 100% {
-            box-shadow: 0 0 20px rgba(220, 38, 38, 0.6), 0 4px 20px rgba(220, 38, 38, 0.4);
-            transform: translateY(0);
-        }
-        50% {
-            box-shadow: 0 0 30px rgba(220, 38, 38, 0.8), 0 8px 25px rgba(220, 38, 38, 0.5);
-            transform: translateY(-2px);
-        }
-    }
-        .grid-container {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4 columns */
-    gap: 20px; /* space between cards */
-    padding: 20px;
-    }
-
-    .card {
-    background: white;
-    border-radius: 15px;
-    padding: 20px;
-    text-align: center;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-
-    .floating-logout-btn:hover {
-        transform: translateY(-5px) scale(1.1) !important;
-        box-shadow: 0 0 40px rgba(220, 38, 38, 0.9), 0 10px 30px rgba(220, 38, 38, 0.6) !important;
-        background: linear-gradient(135deg, #ef4444, #dc2626) !important;
-        color: white !important;
-        animation: none !important;
-    }
-    /* Externals modal styles */
-    .externals-modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(5px);
-    }
-    .externals-content {
-        background: white;
-        border-radius: 25px;
-        padding: 2rem;
-        max-width: 900px;
-        width: 90%;
-        max-height: 80vh;
-        overflow-y: auto;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        position: relative;
-    }
-    .externals-header {
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-    .externals-title {
-        font-size: 2.2rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 0.5rem;
-    }
-    .externals-subtitle {
-        color: #64748b;
-        font-size: 1.1rem;
-    }
-    .external-cards-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 220px); /* 4 cards in each row */
-    grid-template-rows: repeat(2, auto);    /* 2 rows */
-    gap: 1.5rem;
-    margin-top: 2rem;
-    justify-content: center; /* center the whole grid */
-    align-items: start;
-}
-    .external-card {
-    width: 220px;
-    min-height: 200px;
-    background: #fff;
-    border-radius: 18px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.09);
-    border: 1.5px solid #f3f4f6;
-}
-
-
-    .external-card:hover {
-        transform: translateY(-5px) scale(1.03);
-        box-shadow: 0 10px 32px rgba(102, 126, 234, 0.13);
-        border-color: #a5b4fc;
-    }
-    .external-card-img-row {
-        width: 100%;
-        height: 120px;
-        overflow: hidden;
-        border-radius: 18px 18px 0 0;
-        display: block;
-        background: #f3f4f6;
-        position: relative;
-    }
-    .external-card-img-row img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 18px 18px 0 0;
-        background: #fff;
-        display: block;
-    }
-    .external-card-title-row {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #212529;
-        margin: 1rem 1rem 1rem 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-    }
-    /* Circle container */
-.logo-circle {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    overflow: hidden; /* keeps image inside circle */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 0 20px rgba(76, 175, 80, 0.8),
-                0 0 40px rgba(76, 175, 80, 0.6),
-                0 0 60px rgba(76, 175, 80, 0.4);
-}
-
-/* Image fills the circle */
-.logo-circle img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* crop edges, fills circle */
-}
-
+def render_header_and_navigation(user_data):
+    logo_b64 = get_logo_base64()
+    logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="width:100%;height:100%;object-fit:cover;" alt="Zyra">' if logo_b64 else '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/></svg>'
     
-    /* force all images inside logo container */
-.logo-image img,
-.stImage img {
-    width: 100% !important;   /* fills circle */
-    height: 100% !important;
-    object-fit: cover !important; /* zooms to fill instead of leaving gaps */
-}
-    </style>
-    """, unsafe_allow_html=True)
-    
-    # Unified header HTML
-    current_page = st.session_state.get('current_page', 'chatroom')
-    user_initial = user_data['profile']['name'][0].upper() if user_data['profile']['name'] else 'U'
-    user_name = user_data['profile']['name']
-    
+    profile = user_data.get('profile', {})
+    name = profile.get('name', st.session_state.username)
+    initial = name[0].upper() if name else 'U'
+    level = user_data.get('level', 1)
+    xp = user_data.get('xp', 0)
+
     st.markdown(f"""
-    <div class="unified-header">
-        <div class="header-container">
-            <div class="welcome-section">
-                <div class="welcome-title">Welcome to Zyra! 👋</div>
-                <div class="welcome-subtitle">Hi, {user_name}! Ready to map your future?</div>
+    <div class="top-header-bar">
+        <div class="brand-section">
+            <div class="brand-logo-frame">{logo_html}</div>
+            <div>
+                <h1 class="brand-title">Zyra AI</h1>
+                <div style="font-size: 0.74rem; color: #94a3b8; font-weight: 500;">Career & Skills Advisor</div>
             </div>
-            <div class="user-profile">
-                <div class="user-avatar">{user_initial}</div>
-                <div class="user-info">
-                    <div class="user-name">{user_data['profile']['name']}</div>
-                    <div class="user-level">Level {user_data.get('level', 1)} • {user_data.get('xp', 0)} XP</div>
-                </div>
+        </div>
+        <div class="user-profile-badge">
+            <div class="user-avatar-circle">{initial}</div>
+            <div>
+                <div style="font-weight: 700; font-size: 0.84rem; color: #f8fafc;">{name}</div>
+                <div style="font-size: 0.72rem; color: #a5b4fc; font-weight: 600;">Level {level} • {xp} XP</div>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
-    
-    # Navigation buttons in a single row - replaced logout with externals
-    col1, col2, col3, col4, col5, col6 = st.columns([1, 1, 1, 1, 1, 1])
-    
+
+    col1, col2, col3, col4, col5, col6, col7 = st.columns([1.2, 1.1, 1.3, 1.1, 1.3, 1.1, 0.9])
+    current = st.session_state.get('current_page', 'chatroom')
+
     with col1:
-        if st.button("Chatroom", key="nav_chatroom"):
+        if st.button("Advisor", key="nav_chat", type="primary" if current == 'chatroom' else "secondary", use_container_width=True):
             st.session_state.current_page = 'chatroom'
             st.rerun()
-    
+            
     with col2:
-        if st.button("Chat History", key="nav_history"):
+        if st.button("History", key="nav_history", type="primary" if current == 'history' else "secondary", use_container_width=True):
             st.session_state.current_page = 'history'
             st.rerun()
-    
+            
     with col3:
-        if st.button("Profile", key="nav_profile"):
+        if st.button("Profile & Radar", key="nav_profile", type="primary" if current == 'profile' else "secondary", use_container_width=True):
             st.session_state.current_page = 'profile'
             st.rerun()
-    
+            
     with col4:
-        if st.button("Analytics", key="nav_analytics"):
+        if st.button("Analytics", key="nav_analytics", type="primary" if current == 'analytics' else "secondary", use_container_width=True):
             st.session_state.current_page = 'analytics'
             st.rerun()
-    
+
     with col5:
-        if st.button("Career", key="nav_career"):
+        if st.button("Career Paths", key="nav_career", type="primary" if current == 'career' else "secondary", use_container_width=True):
             st.session_state.current_page = 'career'
             st.rerun()
-    
+            
     with col6:
-        if st.button("Externals", key="nav_externals"):
-            st.session_state.show_externals = True
+        if st.button("Resources", key="nav_externals", type="primary" if current == 'externals' else "secondary", use_container_width=True):
+            st.session_state.current_page = 'externals'
             st.rerun()
 
-def render_floating_logout():
-    """Render floating logout button in bottom right with enhanced glow"""
-    logout_js = """
-    <div style="position: fixed; bottom: 30px; right: 30px; z-index: 1000;">
-        <button class="floating-logout-btn" onclick="logoutUser()" title="Logout">
-            🚪
-        </button>
-    </div>
-    <script>
-    function logoutUser() {
-        const logoutBtn = document.querySelector('button[data-testid="logout-btn"]');
-        if (logoutBtn) {
-            logoutBtn.click();
-        }
-    }
-    </script>
-    """
-
-def render_floating_logout():
-    """Render floating logout button in bottom right with enhanced glow"""
-    logout_js = """
-    <div style="position: fixed; bottom: 30px; right: 30px; z-index: 1000;">
-        <button class="floating-logout-btn" onclick="logoutUser()" title="Logout">
-            🚪
-        </button>
-    </div>
-    <script>
-    function logoutUser() {
-        const logoutBtn = document.querySelector('button[data-testid="logout-btn"]');
-        if (logoutBtn) {
-            logoutBtn.click();
-        }
-    }
-    </script>
-    """
-def get_image_base64(image_path):
-    """Load image and convert to base64"""
-    try:
-        if os.path.exists(image_path):
-            with open(image_path, "rb") as f:
-                img_data = f.read()
-            return base64.b64encode(img_data).decode()
-        return None
-    except:
-        return None
-
-def render_externals_modal():
-    """Render externals modal with compact 4x2 card grid, less spacing"""
-    external_tools = [
-        {"name": "Resume Review", "url": "https://resumeworded.com/", "img": "resume.jpg"},
-        {"name": "LinkedIn", "url": "https://linkedin.com/", "img": "linkedin.png"},
-        {"name": "GitHub", "url": "https://github.com/", "img": "github.jpg"},
-        {"name": "Job Search", "url": "https://naukri.com/", "img": "naukri.png"},
-        {"name": "YouTube", "url": "https://youtube.com/", "img": "youtube.jpg"},
-        {"name": "Canva", "url": "https://canva.com/", "img": "canva.jpg"},
-        {"name": "GeeksforGeeks", "url": "https://geeksforgeeks.org/", "img": "gfg.png"},
-        {"name": "Miro Sticky Notes", "url": "https://miro.com/online-sticky-notes/", "img": "notes.jpg"}
-    ]
-
-    # Close button row - push further right
-    col1, col2, col3, col4 = st.columns([10, 1, 0.3, 0.7])
-    with col4:
-        if st.button("❌", key="close_externals_btn", help="Close"):
-            st.session_state.show_externals = False
-            st.rerun()
-
-    idx = 0
-    total = len(external_tools)
-
-    # Grid
-    for _row in range(2):  # 2 rows
-        cols = st.columns([1, 1, 1, 1], gap="small")
-        for c in range(4):
-            with cols[c]:
-                if idx < total:
-                    tool = external_tools[idx]
-                    
-                    # Get image as base64
-                    img_path = os.path.join("photos", tool['img'])
-                    img_b64 = get_image_base64(img_path)
-                    
-                    if img_b64:
-                        img_html = f'<img src="data:image/jpeg;base64,{img_b64}" alt="{tool["name"]}" style="width:100%;height:100%;object-fit:cover;display:block;">'
-                    else:
-                        # Fallback gradient if image not found
-                        img_html = f'<div style="width:100%;height:100%;background:linear-gradient(135deg, #667eea, #764ba2);display:flex;align-items:center;justify-content:center;color:white;font-size:24px;">📱</div>'
-                    
-                    card_html = f"""
-                    <a href="{tool['url']}" target="_blank" style="text-decoration:none;">
-                      <div style="
-                        width:100%;
-                        min-height:200px;
-                        border-radius:10px;
-                        background:#fff;
-                        border:1px solid #ddd;
-                        box-shadow:0 4px 10px rgba(0,0,0,0.05);
-                        overflow:hidden;
-                        margin:4px 2px 14px 2px;
-                      ">
-                        <div style="height:210px;width:100%;background:#f3f4f6;overflow:hidden;">
-                          {img_html}
-                        </div>
-                        <div style="padding:8px 8px;font-weight:600;font-size:14px;color:#111;text-align:center;">
-                          {tool['name']}
-                        </div>
-                      </div>
-                    </a>
-                    """
-                    st.markdown(card_html, unsafe_allow_html=True)
-                idx += 1
-
-    # Close the grid
-    st.markdown('</div>', unsafe_allow_html=True)
-    st.markdown("<br><br>", unsafe_allow_html=True)
-def render_main_content(user_data):
-    current_page = st.session_state.get('current_page', 'chatroom')
-    if current_page == 'chatroom':
-        render_chat_interface(user_data)
-    elif current_page == 'history':
-        render_chat_history_page(user_data)
-    elif current_page == 'profile':
-        render_profile_manager(user_data)
-    elif current_page == 'analytics':
-        render_analytics_page(user_data)
-    elif current_page == 'career':
-        render_career_page(user_data)
-    else:
-        render_chat_interface(user_data)
-
-def render_chat_history_page(user_data):
-    st.markdown("""
-    <style>
-    .history-container {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 1rem;
-    }
-    .history-header {
-        text-align: center;
-        margin-bottom: 2rem;
-        padding: 2rem;
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 20px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    }
-    .history-title {
-        font-size: 2rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 0.5rem;
-    }
-    .conversation-card {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin: 1rem 0;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(0, 0, 0, 0.05);
-    }
-    .conversation-preview {
-        color: #4a5568;
-        font-size: 0.95rem;
-        margin: 0.5rem 0;
-        line-height: 1.5;
-    }
-    .conversation-time {
-        color: #718096;
-        font-size: 0.85rem;
-        font-style: italic;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    st.markdown('<div class="history-container">', unsafe_allow_html=True)
-    st.markdown('''
-    <div class="history-header">
-        <div class="history-title">Your Chat History</div>
-        <p style="color: #64748b; font-size: 1.1rem;">Review your previous conversations with Zyra</p>
-    </div>
-    ''', unsafe_allow_html=True)
-    chat_history = user_data.get('chat_history', [])
-    if not chat_history:
-        st.info("No chat history yet. Start a conversation in the Chatroom to see your history here!")
-        if st.button("Go to Chatroom", type="primary"):
+    with col7:
+        if st.button("Logout", key="nav_logout", type="secondary", use_container_width=True):
+            st.session_state.logged_in = False
+            st.session_state.username = None
             st.session_state.current_page = 'chatroom'
             st.rerun()
-    else:
-        conversations = []
-        current_conversation = []
-        for message in chat_history:
-            current_conversation.append(message)
-            if message['sender'] == 'bot' and len(current_conversation) >= 2:
-                conversations.append(current_conversation.copy())
-                current_conversation = []
-        for i, conversation in enumerate(reversed(conversations)):
-            if len(conversation) >= 2:
-                user_msg = conversation[0] if conversation[0]['sender'] == 'user' else conversation[1]
-                bot_msg = conversation[1] if conversation[1]['sender'] == 'bot' else conversation[0]
-                with st.expander(f"Conversation {len(conversations)-i}: {user_msg['content'][:60]}..."):
-                    st.markdown(f'''
-                    <div class="conversation-card">
-                        <strong>You:</strong>
-                        <div class="conversation-preview">{user_msg['content']}</div>
-                        <br>
-                        <strong>Zyra:</strong>
-                        <div class="conversation-preview">{bot_msg['content']}</div>
-                        <div class="conversation-time">
-                            {format_timestamp(user_msg.get('timestamp', ''))}
-                        </div>
-                    </div>
-                    ''', unsafe_allow_html=True)
-        st.markdown("---")
-        col1, col2 = st.columns([3, 1])
-        with col2:
-            if st.button("Clear All History", type="secondary"):
-                user_data['chat_history'] = []
-                from auth_landing import save_user_data
-                save_user_data(st.session_state.username, user_data)
-                st.success("Chat history cleared!")
+
+    st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+
+def render_chat_history_view(user_data):
+    chat_history = user_data.get('chat_history', [])
+    
+    st.markdown("""
+    <div class="glass-card-panel">
+        <h2 class="panel-header-title">Conversation Archive</h2>
+        <p class="panel-header-desc">Search and review all your previous career consultations with Zyra.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if not chat_history:
+        # Welcoming Empty State Card with Direct CTA Button
+        st.markdown("""
+        <div style="background: rgba(15, 20, 32, 0.85); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 3.5rem 2rem; text-align: center; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);">
+            <div style="width: 60px; height: 60px; margin: 0 auto 1.25rem auto; border-radius: 18px; background: rgba(99, 102, 241, 0.12); border: 1.5px solid rgba(99, 102, 241, 0.3); display: flex; align-items: center; justify-content: center; color: #818cf8;">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <h3 style="font-family: Outfit, sans-serif; font-size: 1.5rem; font-weight: 800; color: #f8fafc; margin-bottom: 0.4rem;">
+                No Prior Consultations Recorded
+            </h3>
+            <p style="color: #94a3b8; font-size: 0.95rem; max-width: 480px; margin: 0 auto 1.5rem auto; line-height: 1.5;">
+                Start your first interactive session with Zyra to explore custom roadmaps, conduct mock interviews, or evaluate your resume.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+        col_c1, col_c2, col_c3 = st.columns([1.5, 1, 1.5])
+        with col_c2:
+            if st.button("Start Consultation →", key="btn_start_history", type="primary", use_container_width=True):
+                st.session_state.current_page = 'chatroom'
                 st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+        return
 
-def format_timestamp(timestamp_str):
-    try:
-        if timestamp_str:
-            from datetime import datetime
-            dt = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
-            return dt.strftime('%B %d, %Y at %I:%M %p')
-        return 'Recently'
-    except:
-        return 'Recently'
+    col_search, col_clear = st.columns([4, 1.2])
+    with col_search:
+        search_query = st.text_input("Search conversations...", placeholder="Search keywords (e.g. interview, python, salary)")
+    with col_clear:
+        st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+        if st.button("Clear History", type="secondary", use_container_width=True):
+            user_data['chat_history'] = []
+            save_user_data(st.session_state.username, user_data)
+            st.success("History cleared.")
+            st.rerun()
 
-def render_analytics_page(user_data):
+    conversations = []
+    curr = []
+    for msg in chat_history:
+        curr.append(msg)
+        if msg.get('sender') == 'bot' and len(curr) >= 2:
+            conversations.append(curr)
+            curr = []
+
+    if curr:
+        conversations.append(curr)
+
+    filtered = [c for c in reversed(conversations) if not search_query or any(search_query.lower() in m.get('content', '').lower() for m in c)]
+
+    if not filtered:
+        st.warning(f"No conversations matched '{search_query}'.")
+        return
+
+    for idx, convo in enumerate(filtered):
+        u_msg = next((m for m in convo if m.get('sender') == 'user'), None)
+        b_msg = next((m for m in convo if m.get('sender') == 'bot'), None)
+        
+        preview = u_msg['content'][:75] + "..." if u_msg else "Career Consultation"
+        ts = u_msg.get('timestamp', '') if u_msg else ''
+        time_str = ""
+        try:
+            if ts:
+                time_str = datetime.fromisoformat(ts).strftime("%b %d, %Y • %I:%M %p")
+        except:
+            time_str = "Recent"
+
+        with st.expander(f"{preview}  —  {time_str}"):
+            if u_msg:
+                st.markdown(f"**You:**\n\n{u_msg['content']}")
+            if b_msg:
+                st.markdown(f"**Zyra:**\n\n{b_msg['content']}")
+
+def render_analytics_view(user_data):
     st.markdown("""
-    <style>
-    .analytics-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 2rem;
-    }
-    .analytics-header {
-        text-align: center;
-        margin-bottom: 3rem;
-    }
-    .analytics-title {
-        font-size: 2.5rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 1rem;
-    }
-    .metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 2rem;
-        margin: 2rem 0;
-    }
-    .metric-card {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 20px;
-        padding: 2rem;
-        text-align: center;
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease;
-    }
-    .metric-card:hover {
-        transform: translateY(-5px);
-    }
-    .metric-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    .metric-label {
-        color: #718096;
-        font-weight: 500;
-        margin-top: 0.5rem;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    st.markdown('<div class="analytics-container">', unsafe_allow_html=True)
-    st.markdown('''
-    <div class="analytics-header">
-        <h1 class="analytics-title">Your Analytics</h1>
-        <p style="color: #718096; font-size: 1.1rem;">Track your career development journey</p>
+    <div class="glass-card-panel">
+        <h2 class="panel-header-title">Learning & Skill Analytics</h2>
+        <p class="panel-header-desc">Track your mentoring momentum, technical skill progression, and career milestones.</p>
     </div>
-    ''', unsafe_allow_html=True)
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.markdown(f'''
-        <div class="metric-card">
-            <div class="metric-value">{len(user_data.get('chat_history', []))}</div>
-            <div class="metric-label">Total Conversations</div>
-        </div>
-        ''', unsafe_allow_html=True)
-    with col3:
-        st.markdown(f'''
-        <div class="metric-card">
-            <div class="metric-value">{user_data.get('level', 1)}</div>
-            <div class="metric-label">Current Level</div>
-        </div>
-        ''', unsafe_allow_html=True)
-    with col4:
-        st.markdown(f'''
-        <div class="metric-card">
-            <div class="metric-value">{len(user_data.get('badges', []))}</div>
-            <div class="metric-label">Badges Earned</div>
-        </div>
-        ''', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-def render_career_page(user_data):
+    chat_count = len(user_data.get('chat_history', []))
+    xp = user_data.get('xp', 0)
+    level = user_data.get('level', 1)
+    badges_count = len(user_data.get('badges', []))
+    completed_goals = len(user_data.get('goals_tracking', {}).get('completed', []))
+
+    # 4 Glowing Metric Cards with SVGs
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        st.markdown(f"""
+        <div class="metric-card-glow">
+            <div class="metric-val-lead">{chat_count}</div>
+            <div class="metric-label-lead">Total Consultations</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with c2:
+        st.markdown(f"""
+        <div class="metric-card-glow">
+            <div class="metric-val-lead">Lvl {level}</div>
+            <div class="metric-label-lead">{xp} Experience Points</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with c3:
+        st.markdown(f"""
+        <div class="metric-card-glow">
+            <div class="metric-val-lead">{completed_goals}</div>
+            <div class="metric-label-lead">Goals Completed</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with c4:
+        st.markdown(f"""
+        <div class="metric-card-glow">
+            <div class="metric-val-lead">{badges_count}</div>
+            <div class="metric-label-lead">Badges Earned</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
+    
+    # Skills Mastery Grid with Progress Fillers
+    tech_skills = user_data.get('skills', {}).get('technical', {})
+    if tech_skills:
+        st.markdown("""
+        <div style="background: rgba(15, 20, 32, 0.85); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 1.75rem 2rem; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4); margin-bottom: 1.5rem;">
+            <h3 style="font-family: Outfit, sans-serif; color: #f8fafc; font-size: 1.35rem; font-weight: 800; margin-bottom: 1.25rem;">
+                Technical Skill Mastery Breakdown
+            </h3>
+        """, unsafe_allow_html=True)
+        
+        cols = st.columns(3)
+        skills_list = list(tech_skills.items())
+        for i, (sk, v) in enumerate(skills_list):
+            with cols[i % 3]:
+                st.markdown(f"""
+                <div class="skill-stat-card">
+                    <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 0.92rem; color: #f1f5f9; margin-bottom: 0.5rem;">
+                        <span>{sk}</span>
+                        <span style="color: #818cf8; font-weight: 800;">{v}%</span>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.08); border-radius: 8px; height: 7px; overflow:hidden;">
+                        <div style="background: linear-gradient(90deg, #4f46e5, #db2777); width: {v}%; height: 100%; border-radius: 8px;"></div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+def render_career_explorer_view(user_data):
     st.markdown("""
-    <style>
-    .career-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 2rem;
-    }
-    .career-header {
-        text-align: center;
-        margin-bottom: 3rem;
-    }
-    .career-title {
-        font-size: 2.5rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 1rem;
-    }
-    .career-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-        margin: 2rem 0;
-    }
-    .career-card {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 20px;
-        padding: 2rem;
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease;
-    }
-    .career-card:hover {
-        transform: translateY(-5px);
-    }
-    .career-card h3 {
-        color: #2d3748;
-        margin-bottom: 1rem;
-    }
-    .salary-badge {
-        display: inline-block;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 15px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        margin: 0.5rem 0;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    st.markdown('<div class="career-container">', unsafe_allow_html=True)
-    st.markdown('''
-    <div class="career-header">
-        <h1 class="career-title">Career Guidance</h1>
-        <p style="color: #718096; font-size: 1.1rem;">Explore trending career paths and opportunities</p>
+    <div class="glass-card-panel">
+        <h2 class="panel-header-title">Emerging Career Pathways</h2>
+        <p class="panel-header-desc">Explore in-demand roles, Indian compensation benchmarks (₹ LPA), and skill roadmaps.</p>
     </div>
-    ''', unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+
     careers = [
         {
-            "title": "Software Development",
-            "salary": "₹4-15 LPA",
-            "skills": "Python, JavaScript, React, SQL",
-            "growth": "Very High"
+            "role": "AI / ML Engineer",
+            "salary": "₹8 - ₹28 LPA",
+            "demand": "High Growth",
+            "skills": ["Python", "PyTorch/TensorFlow", "LLMs & RAG", "Data Pipelines"],
+            "desc": "Architect, fine-tune, and deploy predictive models and generative AI systems into production."
         },
         {
-            "title": "Data Science",
-            "salary": "₹6-20 LPA", 
-            "skills": "Python, SQL, Machine Learning, Statistics",
-            "growth": "Extremely High"
+            "role": "Full-Stack Software Engineer",
+            "salary": "₹7 - ₹22 LPA",
+            "demand": "Very High",
+            "skills": ["React/Next.js", "Node/Python/Go", "PostgreSQL", "Cloud Architecture"],
+            "desc": "Build scalable web applications from interactive user experiences to distributed backend services."
         },
         {
-            "title": "Cloud Engineering",
-            "salary": "₹5-18 LPA",
-            "skills": "AWS, Docker, Kubernetes, Linux",
-            "growth": "High"
+            "role": "Data Scientist & Analytics Lead",
+            "salary": "₹8 - ₹24 LPA",
+            "demand": "In-Demand",
+            "skills": ["Python", "SQL & BigQuery", "Statistical Modeling", "Machine Learning"],
+            "desc": "Transform data into strategic intelligence, optimization models, and automated business decisions."
         },
         {
-            "title": "Product Management",
-            "salary": "₹8-25 LPA",
-            "skills": "Strategy, Analytics, Communication",
-            "growth": "Very High"
+            "role": "Cloud & DevOps Architect",
+            "salary": "₹9 - ₹26 LPA",
+            "demand": "High Demand",
+            "skills": ["AWS/GCP/Azure", "Docker & Kubernetes", "CI/CD", "Terraform"],
+            "desc": "Design automated, resilient, and highly secure cloud infrastructure for modern enterprise systems."
         }
     ]
-    col1, col2 = st.columns(2)
-    for i, career in enumerate(careers):
-        with col1 if i % 2 == 0 else col2:
-            st.markdown(f'''
-            <div class="career-card">
-                <h3>{career["title"]}</h3>
-                <div class="salary-badge">{career["salary"]}</div>
-                <p><strong>Skills:</strong> {career["skills"]}</p>
-                <p><strong>Growth:</strong> {career["growth"]}</p>
+
+    c_col1, c_col2 = st.columns(2)
+    for i, c in enumerate(careers):
+        with c_col1 if i % 2 == 0 else c_col2:
+            st.markdown(f"""
+            <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 18px; padding: 1.5rem; margin-bottom: 1.25rem; backdrop-filter: blur(20px); box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                    <h3 style="color: #f8fafc; font-size: 1.2rem; font-weight: 800; margin: 0;">{c['role']}</h3>
+                    <span style="background: rgba(236, 72, 153, 0.18); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.3); padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: 700;">{c['demand']}</span>
+                </div>
+                <div style="color: #34d399; font-weight: 800; font-size: 1.05rem; margin-bottom: 0.75rem;">{c['salary']}</div>
+                <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.5; margin-bottom: 1rem;">{c['desc']}</p>
+                <div style="margin-bottom: 1rem;">
+                    {"".join([f'<span style="display:inline-block; background:rgba(11,17,32,0.9); border:1px solid rgba(255,255,255,0.1); color:#cbd5e1; padding:3px 10px; border-radius:8px; font-size:0.78rem; font-weight:500; margin:2px 4px 2px 0;">{sk}</span>' for sk in c['skills']])}
+                </div>
             </div>
-            ''', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
+            
+            if st.button(f"Generate Roadmap for {c['role']}", key=f"btn_ask_{i}", type="secondary", use_container_width=True):
+                st.session_state.current_page = 'chatroom'
+                user_data.setdefault('chat_history', []).append({
+                    'sender': 'user',
+                    'content': f"Can you give me a personalized roadmap to become a {c['role']} based on my current skills?",
+                    'timestamp': datetime.now().isoformat()
+                })
+                from chat_interface import process_chat_message
+                process_chat_message(f"Can you give me a personalized roadmap to become a {c['role']} based on my current skills?", user_data)
+                st.rerun()
+
+def render_externals_view(user_data):
     st.markdown("""
-    <div style="text-align: center; margin: 3rem 0;">
-        <h3 style="color: #4a5568; margin-bottom: 1rem;">Get Personalized Career Advice</h3>
-        <p style="color: #718096;">Ask me about specific career paths, skills to learn, or job market trends!</p>
+    <div class="glass-card-panel">
+        <h2 class="panel-header-title">Career & Learning Resources</h2>
+        <p class="panel-header-desc">Curated platforms for job search, AI resume reviews, coding practice, and design.</p>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("💬 Start Chat", type="primary", key="go_to_chat"):
-        st.session_state.current_page = 'chatroom'
-        st.rerun()
+    
+    render_external_resources_grid()
 
 if __name__ == "__main__":
     main()
-

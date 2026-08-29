@@ -1,401 +1,387 @@
-import streamlit as st
-import google.generativeai as genai
+﻿import streamlit as st
+import os
+import json
 import time
+import requests
 from datetime import datetime
 from auth_landing import load_user_data, save_user_data
 
-# ---- CONFIG ----
-API_KEY = st.secrets["API_KEY"]
-genai.configure(api_key=API_KEY)
-model = genai.GenerativeModel(model_name="models/gemini-2.5-flash")
+def query_gemini_api(prompt_text):
+    """Direct, fast HTTPS REST call to Gemini v1beta endpoint"""
+    api_key = None
+    try:
+        if "API_KEY" in st.secrets and st.secrets["API_KEY"]:
+            api_key = st.secrets["API_KEY"]
+    except Exception:
+        pass
+        
+    if not api_key:
+        api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("API_KEY") or ""
+
+    if not api_key:
+        return None, "API Key not configured. Please set API_KEY in .streamlit/secrets.toml or as an environment variable."
+
+    headers = {
+        'Content-Type': 'application/json',
+        'X-goog-api-key': api_key
+    }
+    
+    payload = {
+        'contents': [
+            {
+                'parts': [
+                    {'text': prompt_text}
+                ]
+            }
+        ],
+        'generationConfig': {
+            'temperature': 0.7,
+            'maxOutputTokens': 1500
+        }
+    }
+    
+    models_to_try = [
+        "gemini-flash-latest",
+        "gemini-2.5-flash",
+        "gemini-3.7-flash",
+        "gemini-pro-latest"
+    ]
+    
+    for model_name in models_to_try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
+        try:
+            res = requests.post(url, headers=headers, json=payload, timeout=20)
+            if res.status_code == 200:
+                data = res.json()
+                candidates = data.get('candidates', [])
+                if candidates:
+                    parts = candidates[0].get('content', {}).get('parts', [])
+                    if parts:
+                        return parts[0].get('text', '').strip(), None
+            elif res.status_code == 429:
+                continue
+        except Exception:
+            continue
+            
+    return None, "AI service temporarily unavailable. Please try again."
 
 def load_chat_css():
-    """Big box, chat and chatbox ALWAYS inside the box, welcome disappears after first message, old chats never show outside box"""
     st.markdown("""
     <style>
-    body, .stApp {
-        background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    .chat-stream-panel {
+        max-width: 860px !important;
+        margin: 0 auto !important;
+        padding-bottom: 2.5rem;
     }
-    @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
 
-    /* Hide Streamlit's default elements that might interfere */
-    .stForm {
-        border: none !important;
-        background: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
+    .chat-row-container {
+        display: flex;
+        width: 100%;
+        margin-bottom: 1.25rem;
+        gap: 12px;
+        align-items: flex-start;
+        animation: fadeInBubble 0.2s ease forwards;
     }
-    
-    /* Make sure the main content area has no default padding */
-    .main > div {
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
+
+    .chat-row-container.user {
+        justify-content: flex-end;
     }
-    
-    /* Ensure the Streamlit container itself doesn't add padding */
-    .st-emotion-cache-1kyq9sp {
-        padding: 0 !important;
+
+    .chat-row-container.bot {
+        justify-content: flex-start;
     }
-    
-    .chat-content-area {
-        flex: 1;
+
+    @keyframes fadeInBubble {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chat-avatar-chip {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        margin-top: 2px;
+    }
+
+    .chat-avatar-chip.user {
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        color: white;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+    }
+
+    .chat-avatar-chip.bot {
+        background: linear-gradient(135deg, #0284c7, #2563eb);
+        color: white;
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
+    }
+
+    .bubble-wrapper {
         display: flex;
         flex-direction: column;
-        height: 100%;
-        overflow: hidden;
-    }
-    
-    .welcome-cursive {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        font-family: 'Pacifico', cursive, 'Inter', sans-serif;
-        font-size: 2.7rem;
-        font-weight: 500;
-        color: #6c63ff;
-        padding: 20px;
-        margin: 0;
-        letter-spacing: 0.01em;
-        background: none;
-        border: none;
-        box-shadow: none;
-        transition: opacity 0.3s;
-    }
-    
-    /* Updated styling for chat history container */
-    .chat-history-container {
-        flex: 1;
-        padding: 20px 42px 10px 42px;
-        overflow-y: auto;
-        min-height: 0;
-    }
-    
-    .chat-message-row {
-        display: flex;
-        align-items: flex-end;
-        margin-bottom: 18px;
-    }
-    
-    .chat-message-bubble {
-        font-size: 1.08rem;
-        line-height: 1.62;
-        border-radius: 23px;
-        padding: 1.15rem 1.75rem;
         max-width: 78%;
-        box-shadow: 0 2px 10px rgba(102,126,234,0.09);
+    }
+
+    .bubble-wrapper.user {
+        align-items: flex-end;
+    }
+
+    .bubble-wrapper.bot {
+        align-items: flex-start;
+    }
+
+    .chat-bubble-card {
+        width: fit-content !important;
+        display: inline-block;
+        padding: 0.85rem 1.35rem;
+        font-size: 0.96rem;
+        line-height: 1.55;
         word-break: break-word;
+        box-sizing: border-box;
+    }
+
+    .chat-bubble-card.user {
+        background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);
+        color: #ffffff;
+        border-radius: 18px 18px 4px 18px;
+        box-shadow: 0 6px 20px rgba(67, 56, 202, 0.35);
+    }
+
+    .chat-bubble-card.bot {
+        background: rgba(15, 22, 36, 0.95);
+        color: #f1f5f9;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 18px 18px 18px 4px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .chat-bubble-card.bot h1, .chat-bubble-card.bot h2, .chat-bubble-card.bot h3 {
+        color: #a5b4fc;
+        margin-top: 0.5rem;
+        margin-bottom: 0.35rem;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .chat-bubble-card.bot ul, .chat-bubble-card.bot ol {
+        margin-left: 1.25rem;
         margin-bottom: 0.5rem;
-        background: #f4f7fe;
-        color: #2d3748;
     }
-    
-    .chat-message-bubble.user {
-        background: linear-gradient(135deg, #667eea 60%, #6c63ff 100%);
-        color: white;
-        margin-left: auto;
+
+    .chat-bubble-card.bot strong {
+        color: #38bdf8;
     }
-    
-    .chat-message-bubble.bot {
-        background: linear-gradient(120deg, #e7eafc 70%, #fff 100%);
-        color: #2d3748;
-        margin-right: auto;
-        border: 1.5px solid rgba(102,126,234,0.08);
+
+    .chat-bubble-card.bot code {
+        background: rgba(11, 17, 32, 0.85);
+        color: #f472b6;
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-size: 0.9em;
     }
-    
-    .chat-avatar {
-        width: 38px;
-        height: 38px;
-        border-radius: 50%;
-        font-size: 1.22rem;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 10px;
-        box-shadow: 0 1px 8px rgba(102,126,234,0.13);
-    }
-    
-    .chat-avatar.user {
-        background: linear-gradient(135deg, #667eea 60%, #6c63ff 100%);
-        color: white;
-        order: 2;
-        margin-left: 10px;
-        margin-right: 0;
-    }
-    
-    .chat-avatar.bot {
-        background: linear-gradient(135deg, #10b981 30%, #059669 100%);
-        color: white;
-        order: 1;
-        margin-right: 10px;
-        margin-left: 0;
-    }
-    button, .stButton > button {
-    box-shadow: none !important;
-    }
-    .input-area-section {
-        background: rgba(245, 247, 255, 1);
-        border-radius: 0 0 40px 40px;
-        padding: 0px 52px 26px 52px;
-        border-top: 1.5px solid #e5e7eb;
-        box-shadow: 0 2px 10px rgba(102,126,234,0.07);
-        flex-shrink: 0;
-        width: 100%;
-    }
-    
-    .stTextArea > div > div > textarea {
-        border: 2px solid #a5b4fc !important;
-        border-radius: 19px !important;
-        padding: 1rem 1.25rem !important;
-        font-size: 1.12rem !important;
-        min-height: 70px !important;
-        max-height: 120px !important;
-        background: #e7eafc !important;
-        font-family: 'Inter', sans-serif !important;
-        resize: none !important;
-        transition: border-color 0.3s;
-    }
-    
-    .stTextArea > div > div > textarea:focus {
-        border-color: #6c63ff !important;
-        box-shadow: 0 0 0 4px rgba(102,126,234,0.19) !important;
-        outline: none !important;
-    }
-    
-    .stTextArea > div > div > textarea::placeholder {
-        color: #8b94b5 !important;
-        font-size: 1.07rem !important;
-        font-family: 'Inter', sans-serif !important;
-    }
-    
-    .stButton > button {
-        background: linear-gradient(135deg, #667eea 60%, #6c63ff 100%) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 17px !important;
-        padding: 0.85rem 2.05rem !important;
-        font-weight: 600 !important;
-        font-size: 1.07rem !important;
-        box-shadow: 0 2px 8px rgba(102,126,234,0.13) !important;
-        margin: 0.5rem 0.25rem !important;
-        min-width: 110px !important;
-        transition: box-shadow 0.2s, transform 0.2s;
-    }
-    
-    .stButton > button:hover {
-        transform: translateY(-1px) !important;
-        box-shadow: 6px 18px rgba(102,126,234,0.23) !important;
-    }
-    
-    .stButton > button:active {
-        transform: translateY(0px) !important;
-    }
-    
-    .typing-indicator {
-        display: flex;
-        align-items: center;
-        padding: 0.6rem 0 0.6rem 0;
-        color: #667eea;
-        font-style: italic;
-        font-size: 1.06rem;
+
+    .chat-timestamp {
+        font-size: 0.72rem;
+        color: #64748b;
+        margin-top: 0.3rem;
         font-weight: 500;
     }
-    
-    .typing-dots {
-        display: flex;
-        margin-left: 0.5rem;
+
+    /* Fixed Dark Theme Chat Input */
+    [data-testid="stChatInput"],
+    [data-testid="stChatInput"] > div,
+    [data-testid="stChatInput"] [data-baseweb="textarea"],
+    [data-testid="stChatInput"] [data-baseweb="base-input"],
+    [data-testid="stChatInput"] [data-baseweb="input"] {
+        background: #0d1322 !important;
+        background-color: #0d1322 !important;
+        border: 1.5px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7) !important;
     }
-    
-    .typing-dot {
-        width: 4px;
-        height: 4px;
-        border-radius: 50%;
-        background: #667eea;
-        margin: 0 2px;
-        animation: typing 1.4s infinite ease-in-out;
+
+    [data-testid="stChatInput"]:focus-within,
+    [data-testid="stChatInput"] > div:focus-within {
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3) !important;
     }
-    
-    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
-    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
-    
-    @keyframes typing {
-        0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
-        40% { transform: scale(1); opacity: 1; }
+
+    [data-testid="stChatInput"] textarea {
+        background: transparent !important;
+        background-color: transparent !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        font-size: 0.98rem !important;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        padding: 0.8rem 1rem !important;
+    }
+
+    [data-testid="stChatInput"] textarea::placeholder {
+        color: #94a3b8 !important;
+        -webkit-text-fill-color: #94a3b8 !important;
+    }
+
+    [data-testid="stChatInput"] button {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+        color: #ffffff !important;
+        border-radius: 10px !important;
+        border: none !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-def render_chat_interface(user_data):
-    """
-    - Enclose ALL content inside big box.
-    - Chatbox is ALWAYS at bottom INSIDE the box.
-    - On login: Only cursive welcome message and chatbox at bottom inside box.
-    - After first message: Welcome disappears, chat history starts stacking up above chatbox, all inside the box.
-    - Old chats never show outside the box.
-    """
-
-    if st.session_state.get("first_login", True):
-        user_data['chat_history'] = []
-        save_user_data(st.session_state.username, user_data)
-        st.session_state.first_login = False
-
-    load_chat_css()
-    chat_history = user_data.get('chat_history', [])
-
-    with st.container():
-        st.markdown('<div class="main-chat-boundary">', unsafe_allow_html=True)
-        st.markdown('<div class="chat-content-area">', unsafe_allow_html=True)
-
-        if len(chat_history) == 0:
-            st.markdown('<div class="welcome-cursive">Hiii, let\'s talk and find a path together!</div>', unsafe_allow_html=True)
-        else:
-            # Use a container for the chat history to enable scrolling
-            with st.container(height=650):
-                for message in chat_history:
-                    if message['sender'] == 'user':
-                        user_initial = user_data['profile']['name'][0].upper() if user_data['profile']['name'] else 'U'
-                        st.markdown(f'''
-                        <div class="chat-message-row" style="justify-content:flex-end;">
-                            <div class="chat-message-bubble user">{message['content']}</div>
-                            <div class="chat-avatar user">{user_initial}</div>
-                        </div>
-                        ''', unsafe_allow_html=True)
-                    else:
-                        st.markdown(f'''
-                        <div class="chat-message-row" style="justify-content:flex-start;">
-                            <div class="chat-avatar bot">🤖</div>
-                            <div class="chat-message-bubble bot">{message['content']}</div>
-                        </div>
-                        ''', unsafe_allow_html=True)
-                
-                if st.session_state.get('processing_message', False):
-                    st.markdown('''
-                    <div class="typing-indicator">
-                        Zyra is thinking
-                        <div class="typing-dots">
-                            <div class="typing-dot"></div>
-                            <div class="typing-dot"></div>
-                            <div class="typing-dot"></div>
-                        </div>
-                    </div>
-                    ''', unsafe_allow_html=True)
-
-        st.markdown('</div>', unsafe_allow_html=True) # close chat-content-area
-        
-        # This is the form, which must be INSIDE the boundary.
-        # It's placed directly after the chat content area.
-        with st.form("chat_form", clear_on_submit=True):
-            user_input = st.text_area(
-                "Chat Input",  # ✅ non-empty label for accessibility
-                placeholder="Type your message here...",
-                height=70,
-                key="chat_input",
-                label_visibility="collapsed",
-            )
-
-            # Wrap form content in the input-area-section div
-            send_button = st.form_submit_button("Send Message 🚀", type="primary")
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        st.markdown('</div>', unsafe_allow_html=True) # close main-chat-boundary
-
-    if send_button and user_input.strip():
-        process_chat_message(user_input.strip(), user_data)
-
-def process_chat_message(user_input, user_data):
-    """Process chat message and generate AI response, persistent history"""
+def render_single_bubble(msg, user_data):
+    sender = msg.get('sender', 'user')
+    content = msg.get('content', '')
+    timestamp = msg.get('timestamp', '')
+    time_display = ""
     try:
-        st.session_state.processing_message = True
-        if 'chat_history' not in user_data:
-            user_data['chat_history'] = []
-        user_data['chat_history'].append({
-            'sender': 'user',
-            'content': user_input,
-            'timestamp': datetime.now().isoformat()
-        })
-        profile_context = create_ai_context(user_data, user_input)
-        with st.spinner("Zyra is thinking..."):
-            response = model.generate_content(profile_context)
-            bot_reply = response.text
-            bot_reply = bot_reply.replace("```", "").strip()
+        if timestamp:
+            time_display = datetime.fromisoformat(timestamp).strftime("%I:%M %p")
+    except:
+        pass
 
-        user_data['chat_history'].append({
-            'sender': 'bot',
-            'content': bot_reply,
+    if sender == 'user':
+        user_initial = user_data['profile']['name'][0].upper() if user_data['profile'].get('name') else 'U'
+        st.markdown(f"""
+        <div class="chat-row-container user">
+            <div class="bubble-wrapper user">
+                <div class="chat-bubble-card user">{content}</div>
+                {f'<div class="chat-timestamp">{time_display}</div>' if time_display else ''}
+            </div>
+            <div class="chat-avatar-chip user">{user_initial}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        bot_svg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>'
+        st.markdown(f"""
+        <div class="chat-row-container bot">
+            <div class="chat-avatar-chip bot">{bot_svg}</div>
+            <div class="bubble-wrapper bot">
+                <div class="chat-bubble-card bot">{content}</div>
+                {f'<div class="chat-timestamp">{time_display}</div>' if time_display else ''}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+def render_chat_interface(user_data):
+    load_chat_css()
+    chat_history = user_data.setdefault('chat_history', [])
+
+    st.markdown('<div class="chat-stream-panel">', unsafe_allow_html=True)
+
+    if len(chat_history) == 0:
+        name = user_data['profile'].get('name', 'Explorer')
+        st.markdown(f"""
+        <div style="text-align: center; padding: 4.5rem 1.5rem 2.5rem 1.5rem; color: #94a3b8;">
+            <div style="width: 64px; height: 64px; margin: 0 auto 1.25rem auto; border-radius: 20px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(236, 72, 153, 0.25)); border: 1.5px solid rgba(99, 102, 241, 0.4); display: flex; align-items: center; justify-content: center; color: #818cf8; box-shadow: 0 0 35px rgba(99, 102, 241, 0.3);">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+            </div>
+            <h2 style="color: #f8fafc; font-size: 1.8rem; font-weight: 900; margin-bottom: 0.4rem; font-family: 'Outfit', sans-serif;">
+                Hey {name}, how can I help you today?
+            </h2>
+            <p style="max-width: 460px; margin: 0 auto; line-height: 1.6; color: #94a3b8; font-size: 0.94rem;">
+                Ask anything about coding, tech career transitions, skill gaps, or interview prep.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        for msg in chat_history:
+            render_single_bubble(msg, user_data)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Chat Input with Instant Rendering
+    user_input = st.chat_input("Message Zyra...")
+    if user_input:
+        user_msg = {
+            'sender': 'user',
+            'content': user_input.strip(),
             'timestamp': datetime.now().isoformat()
-        })
-        update_user_progress(user_data, user_input)
+        }
+        chat_history.append(user_msg)
         save_user_data(st.session_state.username, user_data)
-        st.session_state.processing_message = False
+
+        # Immediately render the user's question on screen
+        render_single_bubble(user_msg, user_data)
+
+        # Query AI
+        ai_prompt = create_ai_context(user_data, user_input.strip())
+        with st.spinner("Thinking..."):
+            bot_reply, error_msg = query_gemini_api(ai_prompt)
+            if not bot_reply:
+                bot_reply = f"I apologize, I encountered a temporary issue: {error_msg}. Please ask again."
+
+            chat_history.append({
+                'sender': 'bot',
+                'content': bot_reply,
+                'timestamp': datetime.now().isoformat()
+            })
+            update_user_progress(user_data, user_input.strip())
+            save_user_data(st.session_state.username, user_data)
+        
         st.rerun()
-    except Exception as e:
-        st.session_state.processing_message = False
-        st.error("I'm having trouble processing your message right now. Please try again in a moment.")
-        st.error(f"Technical details: {str(e)}")
 
 def create_ai_context(user_data, user_input):
-    """Context for AI: personalized, Indian market, guidance style"""
     profile = user_data.get('profile', {})
     skills = user_data.get('skills', {})
-    context = f"""
-You are Zyra, an expert AI career advisor with deep knowledge of the Indian job market and global career trends.
+    chat_history = user_data.get('chat_history', [])
+    
+    recent_history = chat_history[-6:] if len(chat_history) > 6 else chat_history[:-1]
+    history_formatted = ""
+    for msg in recent_history:
+        role = "User" if msg.get('sender') == 'user' else "Zyra"
+        history_formatted += f"{role}: {msg.get('content', '')}\n"
 
-You're currently helping {profile.get('name', 'User')}, who has the following profile:
+    tech_skills_str = ', '.join([f"{k} ({v}%)" for k, v in skills.get('technical', {}).items() if v > 0]) or 'Not specified'
 
-PROFILE INFORMATION:
+    system_prompt = f"""
+You are Zyra, an intelligent, friendly, and highly adaptive AI Career Companion and Mentor.
+
+### USER CONTEXT:
+- Name: {profile.get('name', 'User')}
 - Current Role: {profile.get('current_role', 'Student')}
-- Experience Level: {profile.get('experience_level', 'Beginner')}
-- Location: {profile.get('location', 'India')}
-- Education: {profile.get('education', 'Not specified')}
-- Career Goal: {profile.get('goal', 'Professional growth')}
-- Interests: {', '.join(profile.get('interests', ['General career development']))}
+- Target Goal: {profile.get('goal', 'Software / AI Engineer')}
+- Key Skills: {tech_skills_str}
 
-CURRENT SKILLS:
-Technical Skills: {', '.join([f"{skill} ({level}%)" for skill, level in skills.get('technical', {}).items() if level > 0]) or 'None specified'}
-Soft Skills: {', '.join([f"{skill} ({level}%)" for skill, level in skills.get('soft', {}).items() if level > 50]) or 'Basic communication skills'}
+### RECENT CHAT HISTORY:
+{history_formatted if history_formatted else 'No prior messages.'}
 
-USER'S QUESTION: "{user_input}"
+### CURRENT USER MESSAGE:
+"{user_input}"
 
-RESPONSE GUIDELINES:
-1. Provide personalized, actionable advice based on their profile
-2. Include specific salary ranges in Indian context (₹X LPA) when discussing careers
-3. Suggest concrete next steps they can take
-4. Be encouraging and supportive while being realistic
-5. Keep responses focused and under 300 words
-6. Use bullet points or numbered lists when providing multiple recommendations
-7. Reference current market trends and in-demand skills when relevant
-8. If asked about career changes, provide a structured transition plan
-
-Respond in a warm, professional tone as their personal career mentor.
-    """
-    return context
+### INSTRUCTIONS:
+1. **Be Conversational & Natural**: If the user is just saying hello, greeting you, or making small talk (e.g. "hello", "how are you", "what's up"), respond warmly and concisely in 1-2 friendly sentences. DO NOT dump an entire unsolicited career roadmap!
+2. **Match the User's Intent**:
+   - If they ask a quick question, give a direct, concise answer.
+   - If they ask for a detailed roadmap, salary analysis, or mock interview, then provide a structured, in-depth guide with markdown headers and bullet points.
+3. Keep the tone helpful, authentic, modern, and engaging.
+"""
+    return system_prompt
 
 def update_user_progress(user_data, user_input):
-    """XP, level, badges, persistent progress"""
-    user_data['xp'] = user_data.get('xp', 0) + 15
-    new_level = max(1, user_data['xp'] // 200)
+    user_data['xp'] = user_data.get('xp', 0) + 20
+    new_level = max(1, (user_data['xp'] // 150) + 1)
     old_level = user_data.get('level', 1)
     user_data['level'] = new_level
-    if new_level > old_level:
-        st.balloons()
-        st.success(f"Congratulations! You've reached Level {new_level}!")
-    badges = user_data.get('badges', [])
+    
+    badges = user_data.setdefault('badges', ['New Member'])
     chat_count = len(user_data.get('chat_history', []))
-    if chat_count >= 2 and "First Chat" not in badges:
-        badges.append("First Chat")
-        user_data['xp'] += 25
-        st.success("Badge earned: First Chat!")
-    if chat_count >= 10 and "Regular User" not in badges:
-        badges.append("Regular User")
-        user_data['xp'] += 50
-        st.success("Badge earned: Regular User!")
-    if chat_count >= 25 and "Career Explorer" not in badges:
-        badges.append("Career Explorer")
-        user_data['xp'] += 101
-        st.success("Badge earned: Career Explorer!")
-    user_data['badges'] = badges
-    user_data['last_active'] = datetime.now().isoformat()
+    
+    if chat_count >= 2 and "First Dialogue" not in badges:
+        badges.append("First Dialogue")
+        user_data['xp'] += 30
+    if chat_count >= 10 and "Career Enthusiast" not in badges:
+        badges.append("Career Enthusiast")
+        user_data['xp'] += 60
+    if chat_count >= 20 and "Master Strategist" not in badges:
+        badges.append("Master Strategist")
+        user_data['xp'] += 120
 
+    user_data['badges'] = list(set(badges))
+    user_data['last_active'] = datetime.now().isoformat()
